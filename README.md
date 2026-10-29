@@ -1,114 +1,76 @@
-Dưới đây là các bước em làm theo thứ tự, từ `App.tsx` đến `ParentControl.tsx` và cuối cùng là `LightControl.tsx`
 
-# Bước 1: Làm file `App.tsx`
+# 📱 Đây là Đồ án cuối kỳ môn Lập trình Di động 2_PNV & DNC
 
-Mục đích: Hiển thị component cha `ParentControl`.
+Kho lưu trữ này chứa mã nguồn cho bài tập thực hành môn **Lập trình Di động 2**. Dự án được phát triển theo từng giai đoạn và tính năng theo yêu cầu của phiếu chấm điểm môn học.
+*Được thực hiện bởi Hồ Văn Tiết_24PNV02_Class 24PNV1A_- Môn Lập trình Di động 2.*
 
-1. Import `React`, `View` và `ParentControl`.
-2. Tạo component `App`.
-3. Dùng `View` để chứa `<ParentControl />`.
-4. Export `App` để ứng dụng hiển thị.
+---
 
-Ở bước này, chưa xử lý trạng thái đèn hay độ sáng vì những việc đó thuộc component cha.
+## 📌 Tổng quan Dự án & Tiêu chí chấm điểm
 
-# Bước 2: Làm file `ParentControl.tsx`
+Dự án này bao gồm hai phân hệ chính: **Phân hệ Người dùng (User)** và **Phân hệ Quản trị viên (Admin)**, với tổng số điểm tối đa là **10 điểm**.
 
-Mục đích: Quản lý trạng thái đèn và độ sáng, sau đó truyền dữ liệu xuống component con.
+### A. Chức năng của Người dùng (4.0 điểm)
+* [ ] **1. Trang chủ người dùng:** Giao diện hiển thị các sản phẩm có sẵn khi khởi tạo database *(0.25đ)*
+* [ ] **2. Banner & Menu điều hướng:** Gồm các mục Home, Danh mục sản phẩm *(0.25đ)*
+* [ ] **3. Xem sản phẩm theo từng danh mục:** Sử dụng `CategorySelector.tsx` *(0.5đ)*
+* [ ] **4. Chi tiết sản phẩm:** Hiển thị khi click vào sản phẩm ở trang chủ *(0.25đ)*
+* [ ] **5. Bottom Tab (Người dùng):** Gồm 3 nút: Home, Sign up, Login *(0.25đ)*
+* [ ] **6. Đăng ký thành công:** Tính năng đăng ký tài khoản *(0.5đ)*
+* [ ] **7. Điều hướng đăng nhập/đăng ký:** Đăng nhập ở Bottom Tab thành công điều hướng đến trang chủ người dùng *(0.5đ)*
+* [ ] **8. Hiển thị thông tin người dùng:** Hiển thị thông tin người đã đăng nhập và nút đăng xuất qua `Header.tsx` *(0.5đ)*
+* [ ] **9. Tìm kiếm sản phẩm:** Tìm kiếm theo tên/danh mục *(0.5đ)*
+* [ ] **10. Lọc sản phẩm:** Lọc sản phẩm theo khoảng giá *(0.5đ)*
 
-Bước 2.1: Import thư viện
+### B. Chức năng của Admin (4.0 điểm)
+* [ ] **11. Khởi tạo database:** Hỗ trợ sẵn 1 tài khoản admin có sẵn *(0.25đ)*
+* [ ] **12. Đăng nhập Admin:** Bao gồm hiển thị thông tin user đã đăng nhập, đăng xuất (`Header.tsx`); đăng nhập thành công điều hướng đến trang chủ quản trị *(0.5đ)*
+* [ ] **13. Trang chủ quản trị:** Gồm các nút chức năng: Quản lý user, Quản lý loại sản phẩm, Quản lý sản phẩm *(0.25đ)*
+* [ ] **14. Admin Bottom Tab:** Gồm: Home của user, Home của admin, Signup, Login *(0.5đ)*
+* [ ] **15. Quản trị User:** Xem, cập nhật vai trò, xóa user *(0.5đ)*
+* [ ] **16. Quản trị Loại sản phẩm:** Xem, thêm, sửa, xóa loại sản phẩm, và thêm sản phẩm cho loại tương ứng *(1.0đ)*
+* [ ] **17. Quản trị Sản phẩm:** Xem, thêm, sửa, xóa sản phẩm *(1.0đ)*
 
-- `useState`: quản lý trạng thái đèn và độ sáng.
-- `View`, `Text`, `StyleSheet`, `SafeAreaView`: xây dựng giao diện.
-- `LightControl`: gọi component con.
+### C. Chức năng Khác (2.0 điểm)
+* [ ] **18. Chức năng khác của người dùng:** 
+  * Xem và cập nhật giỏ hàng *(0.5đ)*
+  * Checkout đơn hàng và Đặt hàng *(0.5đ)*
+  * Xem lịch sử mua hàng *(0.25đ)*
+  * Cập nhật thông tin người dùng *(0.25đ)*
+* [ ] **19. Chức năng khác của Admin:** 
+  * Quản trị đơn hàng (xem danh sách, cập nhật tình trạng đơn hàng) *(0.5đ)*
 
-Bước 2.2: Khai báo tháng sinh
+---
+
+## 🚀 Tiến độ thực hiện (Development Roadmap)
+
+Repo này sẽ được cập nhật liên tục theo từng bước hoàn thiện các tính năng trên:
+* **Giai đoạn 1:** Khởi tạo dự án, thiết lập CSDL và các trang giao diện cơ bản (Trang chủ, Header, Bottom Tab).
+* **Giai đoạn 2:** Xây dựng hệ thống xác thực (Đăng nhập / Đăng ký) phân quyền Người dùng & Admin.
+* **Giai đoạn 3:** Phát triển các tính năng dành cho người dùng (Xem danh mục, chi tiết, tìm kiếm, lọc giá, giỏ hàng & đặt hàng).
+* **Giai đoạn 4:** Phát triển các tính năng quản trị của Admin (Quản lý user, danh mục, sản phẩm, và duyệt đơn hàng).
+
+---
+
+## 🛠 Hướng dẫn cài đặt & Chạy dự án
+
+*(Phần này sẽ được cập nhật chi tiết các lệnh cài đặt, cấu hình biến môi trường và chạy ứng dụng khi bạn bắt đầu code)*
+
+```bash
+# Clone repository về máy
+git clone <url-repo-cua-ban>
+
+# Di chuyển vào thư mục dự án
+cd <ten-thu-muc>
+
+# Cài đặt các package/thư viện
+npm install
+
+# Chạy ứng dụng
+npm start / npx expo start
 
 ```
-const Thang_sinh = 9;
-```
 
-Biến này quy định mỗi lần nhấn tăng hoặc giảm, độ sáng thay đổi 9%.
+---
+## Cảm ơn đã ghé thăm <3
 
-Bước 2.3: Khởi tạo state
-
-```
-const [isOn, setIsOn] = useState(true);
-const [brightness, setBrightness] = useState(50);
-```
-
-- `isOn`: quản lý đèn đang bật hay tắt.
-- `brightness`: quản lý độ sáng, ban đầu là 50%.
-
-Bước 2.4: Viết các hàm xử lý
-
-- `handleToggle`: đảo trạng thái bật/tắt bằng `setIsOn`.
-- `handleIncrease`: nếu đèn bật, tăng độ sáng thêm 9%; dùng `Math.min(100, ...)` để không vượt quá 100%.
-- `handleDecrease`: nếu đèn bật, giảm độ sáng 9%; dùng `Math.max(0, ...)` để không thấp hơn 0%.
-
-Cả hai hàm tăng và giảm đều kiểm tra `if (!isOn) return;` để không điều chỉnh khi đèn tắt.
-
-Bước 2.5: Xây dựng giao diện component cha
-
-Hiển thị:
-
-- Tiêu đề hệ thống.
-- Họ tên sinh viên và ngày sinh.
-- Khu vực `===== COMPONENT CHA =====`.
-- Trạng thái đèn, đổi chữ xanh khi bật và đỏ khi tắt.
-- Độ sáng hiện tại.
-
-Bước 2.6: Truyền dữ liệu xuống component con
-
-Dùng `<LightControl />` và truyền 5 props:
-
-- `isOn`: trạng thái đèn.
-- `brightness`: độ sáng.
-- `onToggle`: hàm bật/tắt.
-- `onIncrease`: hàm tăng độ sáng.
-- `onDecrease`: hàm giảm độ sáng.
-
-Cuối cùng, viết `StyleSheet.create()` để định dạng giao diện và `export default ParentControl`.
-
-# Bước 3: Làm file `LightControl.tsx`
-
-Mục đích: Hiển thị dữ liệu nhận được và cung cấp các nút điều khiển cho người dùng.
-
-Bước 3.1: Import thư viện
-
-Import `React`, `View`, `Text`, `StyleSheet` và `TouchableOpacity`.
-
-Bước 3.2: Khai báo kiểu `Props`
-
-Khai báo 5 thuộc tính giống với dữ liệu component cha truyền xuống, gồm 2 dữ liệu (`isOn`, `brightness`) và 3 callback (`onToggle`, `onIncrease`, `onDecrease`).
-
-Bước 3.3: Nhận props
-
-Trong hàm `LightControl`, lấy 5 thuộc tính từ `Props` để sử dụng trực tiếp, không cần tạo `useState` mới.
-
-Bước 3.4: Hiển thị dữ liệu
-
-Tạo khu vực `===== COMPONENT CON =====`, hiển thị:
-
-- Trạng thái nhận được, chữ xanh khi bật và đỏ khi tắt.
-- Độ sáng nhận được.
-- Hình bóng đèn minh họa bằng `View`: vàng khi bật, xám khi tắt.
-
-Bước 3.5: Tạo 3 nút chức năng
-
-- Nút bật/tắt gọi `onToggle`.
-- Nút tăng độ sáng gọi `onIncrease`.
-- Nút giảm độ sáng gọi `onDecrease`.
-
-Dùng `disabled={!isOn || brightness === 100}` cho nút tăng và `disabled={!isOn || brightness === 0}` cho nút giảm.
-
-Khi đèn tắt, hiển thị thêm thông báo không thể điều chỉnh độ sáng.
-
-Bước 3.6: Hoàn thiện giao diện
-
-Dùng `StyleSheet.create()` để định dạng khu vực component con, bóng đèn và các nút; cuối file thêm `export default LightControl`.
-
-# Bước 4: Chạy và kiểm tra
-
-Kiểm tra bật/tắt đèn, tăng/giảm 9%, giới hạn độ sáng từ 0 đến 100 và việc không thể điều chỉnh độ sáng khi đèn tắt.
-
-Tóm lại: `App.tsx` dùng để hiển thị cha → `ParentControl.tsx` quản lý state và truyền props → `LightControl.tsx` hiển thị dữ liệu, gọi callback để cha cập nhật state.
