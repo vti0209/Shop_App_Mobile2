@@ -39,11 +39,16 @@ const initialCategories: Category[] = [
   { id: 5, name: 'Túi' },
 ];
 const initialProducts: Product[] = [
-    { id: 1, name: 'Áo sơ mi', price: 250000, img: 'hinh1.jpg', categoryId: 1 },
-    { id: 2, name: 'Giày sneaker', price: 1100000, img: 'hinh1.jpg', categoryId: 2 },
-    { id: 3, name: 'Balo thời trang', price: 490000, img: 'hinh1.jpg', categoryId: 3 },
-    { id: 4, name: 'Mũ lưỡi trai', price: 120000, img: 'hinh1.jpg', categoryId: 4 },
-    { id: 5, name: 'Túi xách nữ', price: 980000, img: 'hinh1.jpg', categoryId: 5 },
+    { id: 1, name: 'Áo sơ mi', price: 250000, img: 'sanpham1.png', categoryId: 1 },
+    { id: 2, name: 'Giày sneaker', price: 1100000, img: 'sanpham2.png', categoryId: 2 },
+    { id: 3, name: 'Balo thời trang', price: 490000, img: 'sanpham3.png', categoryId: 3 },
+    { id: 4, name: 'Mũ lưỡi trai', price: 120000, img: 'sanpham4.png', categoryId: 4 },
+    { id: 5, name: 'Túi xách nữ', price: 980000, img: 'sanpham5.png', categoryId: 5 },
+    { id: 6, name: 'Áo thun năng động', price: 180000, img: 'sanpham6.png', categoryId: 1 },
+    { id: 7, name: 'Giày chạy bộ', price: 850000, img: 'sanpham7.png', categoryId: 2 },
+    { id: 8, name: 'Balo laptop', price: 550000, img: 'sanpham8.png', categoryId: 3 },
+    { id: 9, name: 'Mũ len ấm áp', price: 150000, img: 'sanpham9.png', categoryId: 4 },
+    { id: 10, name: 'Túi đeo chéo', price: 420000, img: 'sanpham10.png', categoryId: 5 },
   ];
 
 //async: Khai báo đây là một hàm bất đồng bộ, cho phép sử dụng await bên trong
@@ -62,6 +67,7 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
         initialCategories.forEach((category) => {
           tx.executeSql('INSERT OR IGNORE INTO categories (id, name) VALUES (?, ?)', [category.id, category.name]);
         });
+
  
         tx.executeSql(`CREATE TABLE IF NOT EXISTS products (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,6 +82,7 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
           tx.executeSql('INSERT OR IGNORE INTO products (id, name, price, img, categoryId) VALUES (?, ?, ?, ?, ?)',
             [product.id, product.name, product.price, product.img, product.categoryId]);
         });
+
 
          tx.executeSql(
             `CREATE TABLE IF NOT EXISTS users (

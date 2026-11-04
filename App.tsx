@@ -1,17 +1,20 @@
-// Đồ án cuối kỳ Môn Lập trình Di động 2
-// Chức năng 13: Trang chủ quản trị (Admin Home)
+// BUỔI 13 - 03/11/2026 - ĐIỀU HƯỚNG SẢN PHẨM
 import React from 'react';
-import AdminHomeScreen from './src/components/admin/AdminHomeScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import AppNavigatorProduct from './src/components/AppNavigatorProduct';
 
-// Nếu muốn xem lại bài tập thực hành cũ thì mở dòng bên dưới:
-// import ProductSqlite from './src/components/ProductSqlite';
+// Nếu muốn chạy bài mẫu Stack đơn giản (Home -> Detail):
+// import AppNavigator from './src/components/AppNavigator';
 
-const App = () => {
-  // Hiển thị Trang chủ quản trị (Chức năng 13 trong phiếu chấm)
-  return <AdminHomeScreen />;
+// Nếu muốn chạy trang Quản trị Admin:
+// import AdminHomeScreen from './src/components/admin/AdminHomeScreen';
 
-  // Bài tập cũ:
-  // return <ProductSqlite />;
-};
+function App() {
+  return (
+    <NavigationContainer>
+      <AppNavigatorProduct />
+    </NavigationContainer>
+  );
+}
 
 export default App;
