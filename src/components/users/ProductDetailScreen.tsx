@@ -1,19 +1,23 @@
-// Trang chi tiết sản phẩm 1
+// Trang chi tiết sản phẩm
 import React, { useEffect, useState } from 'react';
-import { Text, Image, StyleSheet, ScrollView, View, TouchableOpacity } from 'react-native';
-import { RouteProp, useRoute } from '@react-navigation/native';
-import { fetchCategories, Category } from './database';
-import { RootStackParamList } from './AppNavigatorProduct';
-import { getProductImageSource } from '../utils/imageHelper';
+import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { fetchCategories } from '../../database/projectDb';
+import type { Category } from '../../database/types';
+import CategorySelector from './CategorySelector';
+import { RootStackParamList } from '../AppNavigatorProduct';
+import { getProductImageSource } from '../../utils/imageHelper';
 
 type ProductDetailRouteProp = RouteProp<RootStackParamList, 'ProductDetail'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProductsByCategory'>;
 
-const ProductDetailScreen1 = () => {
+const ProductDetailScreen = () => {
   const route = useRoute<ProductDetailRouteProp>();
+  const navigation = useNavigation<NavigationProp>();
   const { product } = route.params;
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(product.categoryId);
 
   useEffect(() => {
     const load = async () => {
@@ -23,8 +27,19 @@ const ProductDetailScreen1 = () => {
     load();
   }, []);
 
+  const handleSelectCategory = (id: number) => {
+    const selected = categories.find((c) => c.id === id);
+    if (selected) {
+      navigation.navigate('ProductsByCategory', {
+        categoryId: selected.id,
+        categoryName: selected.name,
+      });
+    }
+  };
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
+      {/* Khung hiển thị ảnh sản phẩm */}
       <View style={styles.imageCard}>
         <Image
           source={getProductImageSource(product.img)}
@@ -32,29 +47,20 @@ const ProductDetailScreen1 = () => {
         />
       </View>
 
+      {/* Thông tin sản phẩm */}
       <View style={styles.infoCard}>
         <Text style={styles.name}>{product.name}</Text>
         <Text style={styles.price}>{product.price.toLocaleString('vi-VN')} đ</Text>
       </View>
 
-      <View style={styles.categoryCard}>
-        <Text style={styles.label}>Chọn loại sản phẩm:</Text>
-        <View style={styles.categories}>
-          {categories.map((category) => {
-            const isSelected = selectedCategoryId === category.id;
-            return (
-              <TouchableOpacity
-                key={category.id}
-                style={[styles.category, isSelected && styles.selectedCategory]}
-                onPress={() => setSelectedCategoryId(category.id)}
-              >
-                <Text style={[styles.categoryText, isSelected && styles.selectedCategoryText]}>
-                  {category.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+      {/* Danh mục sản phẩm liên quan */}
+      <View style={styles.categorySection}>
+        <Text style={styles.label}>Xem các sản phẩm khác theo loại:</Text>
+        <CategorySelector
+          categories={categories}
+          selectedId={product.categoryId}
+          onSelect={handleSelectCategory}
+        />
       </View>
     </ScrollView>
   );
@@ -76,6 +82,7 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
     padding: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
   },
   image: {
@@ -102,7 +109,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#e11d48',
   },
-  categoryCard: {
+  categorySection: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
@@ -113,34 +120,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#334155',
-    marginBottom: 10,
-  },
-  categories: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  category: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#f1f5f9',
-  },
-  selectedCategory: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
-  },
-  categoryText: {
-    color: '#475569',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  selectedCategoryText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
+    marginBottom: 8,
   },
 });
 
-export default ProductDetailScreen1;
+export default ProductDetailScreen;

@@ -10,11 +10,11 @@ import {
   View,
 } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import type { RootStackParamList } from './AppNavigatorProduct';
+import type { RootStackParamList } from '../AppNavigatorProduct';
 import CategorySelector from './CategorySelector';
-import { fetchCategories, fetchProducts, initProjectDatabase } from '../database/projectDb';
-import type { Category, Product } from '../database/types';
-import { getProductImageSource } from '../utils/imageHelper';
+import { fetchCategories, fetchProducts, initProjectDatabase } from '../../database/projectDb';
+import type { Category, Product } from '../../database/types';
+import { getProductImageSource } from '../../utils/imageHelper';
 
 type CustomerNavigation = NavigationProp<RootStackParamList>;
 const allProductsCategory: Category = { id: 0, name: 'Tất cả' };
@@ -86,7 +86,6 @@ const CustomerHomeScreen = () => {
     <View style={styles.screen}>
       {/* Bước 4: Chào mừng người dùng và cho phép lọc sản phẩm theo danh mục. */}
       <View style={styles.banner}>
-        <Text style={styles.bannerCaption}>Tạp hóa Vanw Tiet</Text>
         <Text style={styles.bannerTitle} numberOfLines={2}>
           Xin chào!
         </Text>

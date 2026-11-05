@@ -26,7 +26,6 @@
 - Giữ lại màn hình quản lý sản phẩm cũ và các màn hình Admin hiện có. Sửa Admin Dashboard để nút quản lý mở đúng các màn hình con.
 - Chỉnh bố cục các trang đăng nhập/đăng ký, danh sách sản phẩm và quản trị để nội dung co giãn trên màn hình hẹp; danh mục tiếp tục cuộn ngang.
 - Đồng bộ placeholder trong các biểu mẫu và cải thiện khoảng cách nút.
-- Các nút thao tác dùng emoji trực tiếp: ✏️ sửa, 🗑️ xóa, ➕ thêm. Thanh điều hướng và một số mục giao diện cũng dùng emoji/ký tự trực tiếp, không phụ thuộc MaterialCommunityIcons.
 - Đã gỡ khai báo TypeScript `src/types/react-native-vector-icons.d.ts` và cấu hình nhúng font khỏi `android/app/build.gradle`.
 
 ## Kiểm tra

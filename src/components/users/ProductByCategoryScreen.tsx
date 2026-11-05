@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from './AppNavigatorProduct';
-import { fetchCategories, fetchProductsByCategory } from '../database/projectDb';
-import type { Category, Product } from '../database/types';
+import { RootStackParamList } from '../AppNavigatorProduct';
+import { fetchCategories, fetchProductsByCategory } from '../../database/projectDb';
+import type { Category, Product } from '../../database/types';
 import CategorySelector from './CategorySelector';
-import { getProductImageSource } from '../utils/imageHelper';
+import { getProductImageSource } from '../../utils/imageHelper';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProductsByCategory'>;
 type RouteProps = RouteProp<RootStackParamList, 'ProductsByCategory'>;

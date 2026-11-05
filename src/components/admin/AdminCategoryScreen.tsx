@@ -18,7 +18,6 @@ import {
   deleteCategory,
 } from '../../database/projectDb';
 import { Category } from '../../database/types';
-import ActionIconButton from '../ActionIconButton';
 
 interface AdminCategoryScreenProps {
   onBack?: () => void;
@@ -100,8 +99,24 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
         </Text>
       </View>
       <View style={styles.catActions}>
-        <ActionIconButton action="edit" onPress={() => handleEdit(item)} />
-        <ActionIconButton action="delete" onPress={() => handleDelete(item)} />
+        <TouchableOpacity
+          style={[styles.actionButton, styles.editActionButton]}
+          onPress={() => handleEdit(item)}
+          accessibilityRole="button"
+          accessibilityLabel="Sửa"
+          hitSlop={4}
+        >
+          <Text style={styles.actionIcon}>✏️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteActionButton]}
+          onPress={() => handleDelete(item)}
+          accessibilityRole="button"
+          accessibilityLabel="Xóa"
+          hitSlop={4}
+        >
+          <Text style={styles.actionIcon}>🗑️</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -308,6 +323,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginLeft: 8,
+  },
+  actionButton: {
+    minWidth: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  actionIcon: {
+    fontSize: 19,
+    lineHeight: 24,
+    includeFontPadding: false,
+  },
+  editActionButton: {
+    backgroundColor: '#0f766e',
+  },
+  deleteActionButton: {
+    backgroundColor: '#dc2626',
   },
   emptyText: {
     textAlign: 'center',

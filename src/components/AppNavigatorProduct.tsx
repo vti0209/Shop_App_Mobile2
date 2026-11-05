@@ -3,18 +3,16 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Sanpham3Sqlite from './Sanpham3Sqlite';
-import CustomerTabNavigator from './CustomerTabNavigator';
-import ProductDetailScreen from './ProductDetailScreen';
-import ProductsByCategoryScreen from './ProductsByCategoryScreen';
+import CustomerTabNavigator from './users/CustomerTabNavigator';
+import ProductDetailScreen from './users/ProductDetailScreen';
+import ProductsByCategoryScreen from './users/ProductByCategoryScreen';
 import LoginScreen from './LoginScreen';
 import RegisterScreen from './RegisterScreen';
-import AdminHomeScreen from './admin/AdminHomeScreen';
+import AdminTabNavigator from './admin/AdminTabNavigator';
 import type { Product } from '../database/types';
 
 // Khai báo kiểu tham số cho các màn hình trong luồng xác thực và cửa hàng.
 export type RootStackParamList = {
-  Sanpham3Sqlite: undefined;
   CustomerTabs: { username?: string } | undefined;
   AdminHome: undefined;
   ProductDetail: { product: Product };
@@ -31,7 +29,7 @@ const LogoutHeaderButton = () => {
 
   return (
     <Pressable
-      onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Login' }] })}
+      onPress={() => navigation.reset({ index: 0, routes: [{ name: 'CustomerTabs' }] })}
       style={styles.logoutButton}
       accessibilityRole="button"
       accessibilityLabel="Đăng xuất"
@@ -66,19 +64,13 @@ export default function AppNavigatorProduct() {
       />
       <Stack.Screen
         name="AdminHome"
-        component={AdminHomeScreen}
+        component={AdminTabNavigator}
         options={{
           title: 'Admin Dashboard',
           headerRight: LogoutHeaderButton,
         }}
       />
 
-      {/* Giữ nguyên màn hình quản lý sản phẩm cũ để không xóa chức năng hiện có. */}
-      <Stack.Screen
-        name="Sanpham3Sqlite"
-        component={Sanpham3Sqlite}
-        options={{ title: 'Quản lý sản phẩm' }}
-      />
       <Stack.Screen
         name="ProductDetail"
         component={ProductDetailScreen}
@@ -92,7 +84,6 @@ export default function AppNavigatorProduct() {
           title: route.params.categoryName || 'Sản phẩm theo loại',
         })}
       />
-
     </Stack.Navigator>
   );
 }

@@ -1,7 +1,7 @@
 // Component danh sách các nút loại sản phẩm
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Category } from './database';
+import type { Category } from '../../database/types';
 
 interface Props {
   categories: Category[];

@@ -3,6 +3,8 @@
 // Gồm các nút chức năng: Quản lý user, Quản lý loại sản phẩm, Quản lý sản phẩm
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import {
   StyleSheet,
   Text,
@@ -12,14 +14,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { initProjectDatabase, getDashboardStats } from '../../database/projectDb';
-import AdminUserScreen from './AdminUserScreen';
-import AdminCategoryScreen from './AdminCategoryScreen';
-import AdminProductScreen from './AdminProductScreen';
-
-export type AdminViewType = 'HOME' | 'USERS' | 'CATEGORIES' | 'PRODUCTS';
+import type { AdminTabParamList } from './AdminTabNavigator';
 
 const AdminHomeScreen: React.FC = () => {
-  const [activeView, setActiveView] = useState<AdminViewType>('HOME');
+  const navigation = useNavigation<BottomTabNavigationProp<AdminTabParamList>>();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalCategories: 0,
@@ -37,35 +35,16 @@ const AdminHomeScreen: React.FC = () => {
     });
   }, [loadStats]);
 
-  const handleBack = () => {
-    setActiveView('HOME');
-    loadStats();
-  };
-
-  // Điều hướng màn hình con
-  if (activeView === 'USERS') {
-    return <AdminUserScreen onBack={handleBack} />;
-  }
-
-  if (activeView === 'CATEGORIES') {
-    return <AdminCategoryScreen onBack={handleBack} />;
-  }
-
-  if (activeView === 'PRODUCTS') {
-    return <AdminProductScreen onBack={handleBack} />;
-  }
-
   // Giao diện chính Trang chủ quản trị
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Tiêu đề trang */}
-        <Text style={styles.title}>TRANG CHỦ QUẢN TRỊ</Text>
-        <Text style={styles.subtitle}>Tài khoản: admin (Quản trị viên)</Text>
+        <Text style={styles.title}>Admin</Text>
 
         {/* Khung tóm tắt thống kê gọn gàng */}
         <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Tổng quan hệ thống</Text>
+          <Text style={styles.statsTitle}>Tổng quan</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{stats.totalUsers}</Text>
@@ -73,7 +52,7 @@ const AdminHomeScreen: React.FC = () => {
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{stats.totalCategories}</Text>
-              <Text style={styles.statLabel}>Loại sản phẩm</Text>
+              <Text style={styles.statLabel}>Danh mục</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{stats.totalProducts}</Text>
@@ -82,45 +61,30 @@ const AdminHomeScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* CÁC NÚT CHỨC NĂNG CHÍNH THEO ĐÚNG PHIẾU CHẤM */}
-        <Text style={styles.menuTitle}>Chức năng quản trị</Text>
+        <Text style={styles.menuTitle}>Menu</Text>
 
         {/* Nút 1: Quản lý user */}
         <TouchableOpacity
           style={[styles.menuButton, styles.btnUser]}
-          onPress={() => setActiveView('USERS')}
+          onPress={() => navigation.navigate('Users')}
         >
-          <Text style={styles.menuButtonTitle}>Quản lý user</Text>
-          <Text style={styles.menuButtonDesc}>
-            Xem danh sách, phân quyền và quản lý tài khoản người dùng ({stats.totalUsers})
-          </Text>
+          <Text style={styles.menuButtonTitle}>Quản lý user ({stats.totalUsers})</Text>
         </TouchableOpacity>
 
         {/* Nút 2: Quản lý loại sản phẩm */}
         <TouchableOpacity
           style={[styles.menuButton, styles.btnCategory]}
-          onPress={() => setActiveView('CATEGORIES')}
+          onPress={() => navigation.navigate('Categories')}
         >
-          <Text style={styles.menuButtonTitle}>Quản lý loại sản phẩm</Text>
-          <Text style={styles.menuButtonDesc}>
-            Xem, thêm mới, chỉnh sửa và xóa danh mục sản phẩm ({stats.totalCategories})
-          </Text>
+          <Text style={styles.menuButtonTitle}>Quản lý loại sản phẩm ({stats.totalCategories})</Text>
         </TouchableOpacity>
 
         {/* Nút 3: Quản lý sản phẩm */}
         <TouchableOpacity
           style={[styles.menuButton, styles.btnProduct]}
-          onPress={() => setActiveView('PRODUCTS')}
+          onPress={() => navigation.navigate('Products')}
         >
-          <Text style={styles.menuButtonTitle}>Quản lý sản phẩm</Text>
-          <Text style={styles.menuButtonDesc}>
-            Xem danh sách kho, thêm mới, sửa giá và xóa sản phẩm ({stats.totalProducts})
-          </Text>
-        </TouchableOpacity>
-
-        {/* Nút làm mới dữ liệu */}
-        <TouchableOpacity style={styles.btnRefresh} onPress={loadStats}>
-          <Text style={styles.btnRefreshText}>Làm mới dữ liệu</Text>
+          <Text style={styles.menuButtonTitle}>Quản lý sản phẩm ({stats.totalProducts})</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

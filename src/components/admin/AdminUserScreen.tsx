@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { fetchUsers, updateUserRole, deleteUser, addUser } from '../../database/projectDb';
 import { User } from '../../database/types';
-import ActionIconButton from '../ActionIconButton';
 
 interface AdminUserScreenProps {
   onBack?: () => void;
@@ -25,7 +24,6 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'admin' | 'user'>('user');
 
   useEffect(() => {
     loadUsers();
@@ -33,7 +31,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
 
   const loadUsers = async () => {
     const list = await fetchUsers();
-    setUsers(list);
+    setUsers(list.filter((user) => user.username !== 'admin'));
   };
 
   const handleAddUser = async () => {
@@ -46,7 +44,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
       username: username.trim(),
       password: password.trim(),
       fullName: fullName.trim(),
-      role: role,
+      role: 'user',
     });
 
     if (success) {
@@ -128,9 +126,17 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
 
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.btnRole} onPress={() => handleToggleRole(item)}>
-            <Text style={styles.btnActionText}>Đổi quyền</Text>
+            <Text style={styles.btnActionText}>🔁</Text>
           </TouchableOpacity>
-          <ActionIconButton action="delete" onPress={() => handleDeleteUser(item)} />
+          <TouchableOpacity
+            style={[styles.actionButton, styles.deleteActionButton]}
+            onPress={() => handleDeleteUser(item)}
+            accessibilityRole="button"
+            accessibilityLabel="Xóa"
+            hitSlop={4}
+          >
+            <Text style={styles.actionIcon}>🗑️</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -158,7 +164,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
             onPress={() => setShowAddForm(!showAddForm)}
           >
             <Text style={styles.btnAddToggleText}>
-              {showAddForm ? 'Đóng' : '➕ Thêm User'}
+              {showAddForm ? 'Đóng' : '✍️Thêm'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -189,26 +195,6 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
               value={fullName}
               onChangeText={setFullName}
             />
-
-            <View style={styles.roleRow}>
-              <Text style={styles.roleLabel}>Vai trò:</Text>
-              <TouchableOpacity
-                style={[styles.roleBtn, role === 'user' && styles.roleBtnActive]}
-                onPress={() => setRole('user')}
-              >
-                <Text style={[styles.roleBtnText, role === 'user' && styles.roleBtnTextActive]}>
-                  User
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.roleBtn, role === 'admin' && styles.roleBtnActive]}
-                onPress={() => setRole('admin')}
-              >
-                <Text style={[styles.roleBtnText, role === 'admin' && styles.roleBtnTextActive]}>
-                  Admin
-                </Text>
-              </TouchableOpacity>
-            </View>
 
             <TouchableOpacity style={styles.btnSave} onPress={handleAddUser}>
               <Text style={styles.btnSaveText}>Lưu người dùng</Text>
@@ -321,39 +307,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1e293b',
   },
-  roleRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    rowGap: 6,
-    marginBottom: 10,
-  },
-  roleLabel: {
-    fontSize: 13,
-    color: '#333',
-    marginRight: 10,
-  },
-  roleBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginRight: 8,
-    backgroundColor: '#fff',
-  },
-  roleBtnActive: {
-    backgroundColor: '#0d6efd',
-    borderColor: '#0d6efd',
-  },
-  roleBtnText: {
-    fontSize: 12,
-    color: '#333',
-  },
-  roleBtnTextActive: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
   btnSave: {
     backgroundColor: '#198754',
     paddingVertical: 8,
@@ -426,6 +379,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 4,
+  },
+  actionButton: {
+    minWidth: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  actionIcon: {
+    fontSize: 19,
+    lineHeight: 24,
+    includeFontPadding: false,
+  },
+  deleteActionButton: {
+    backgroundColor: '#dc2626',
   },
   btnActionText: {
     color: '#fff',

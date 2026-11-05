@@ -3,12 +3,6 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigatorProduct from './src/components/AppNavigatorProduct';
 
-// Nếu muốn chạy bài mẫu Stack đơn giản (Home -> Detail):
-// import AppNavigator from './src/components/AppNavigator';
-
-// Nếu muốn chạy trang Quản trị Admin:
-// import AdminHomeScreen from './src/components/admin/AdminHomeScreen';
-
 function App() {
   return (
     <NavigationContainer>

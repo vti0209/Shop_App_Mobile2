@@ -24,7 +24,6 @@ import {
 } from '../../database/projectDb';
 import { Product, Category } from '../../database/types';
 import { getProductImageSource } from '../../utils/imageHelper';
-import ActionIconButton from '../ActionIconButton';
 
 interface AdminProductScreenProps {
   onBack?: () => void;
@@ -162,8 +161,24 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
         </Text>
       </View>
       <View style={styles.actionColumn}>
-        <ActionIconButton action="edit" onPress={() => handleEdit(item)} />
-        <ActionIconButton action="delete" onPress={() => handleDelete(item.id)} />
+        <TouchableOpacity
+          style={[styles.actionButton, styles.editActionButton]}
+          onPress={() => handleEdit(item)}
+          accessibilityRole="button"
+          accessibilityLabel="Sửa"
+          hitSlop={4}
+        >
+          <Text style={styles.actionIcon}>✏️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteActionButton]}
+          onPress={() => handleDelete(item.id)}
+          accessibilityRole="button"
+          accessibilityLabel="Xóa"
+          hitSlop={4}
+        >
+          <Text style={styles.actionIcon}>🗑️</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -430,5 +445,19 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: 11, color: '#64748b', marginTop: 2 },
   productPrice: { fontSize: 12, fontWeight: '700', color: '#e11d48', marginTop: 3 },
   actionColumn: { gap: 7, alignItems: 'center' },
+  actionButton: {
+    minWidth: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  actionIcon: {
+    fontSize: 19,
+    lineHeight: 24,
+    includeFontPadding: false,
+  },
+  editActionButton: { backgroundColor: '#0f766e' },
+  deleteActionButton: { backgroundColor: '#dc2626' },
   emptyText: { textAlign: 'center', color: '#888', marginTop: 15 },
 });

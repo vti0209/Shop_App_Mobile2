@@ -267,7 +267,9 @@ export const getDashboardStats = async (): Promise<{
 }> => {
   try {
     const db = await getProjectDb();
-    const [userRes] = await db.executeSql('SELECT COUNT(*) as count FROM users');
+    const [userRes] = await db.executeSql(
+      "SELECT COUNT(*) as count FROM users WHERE username <> 'admin'"
+    );
     const [catRes] = await db.executeSql('SELECT COUNT(*) as count FROM categories');
     const [prodRes] = await db.executeSql('SELECT COUNT(*) as count FROM products');
 

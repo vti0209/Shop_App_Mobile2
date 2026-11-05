@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomerHomeScreen from './CustomerHomeScreen';
-import { fetchCategories, initProjectDatabase } from '../database/projectDb';
-import type { Category } from '../database/types';
-import type { RootStackParamList } from './AppNavigatorProduct';
+import { fetchCategories, initProjectDatabase } from '../../database/projectDb';
+import type { Category } from '../../database/types';
+import type { RootStackParamList } from '../AppNavigatorProduct';
 
 type CustomerTabParamList = {
   Shop: { username?: string } | undefined;
@@ -18,15 +19,15 @@ const categoryIcons = ['🧴', '🍼', '🍲', '🧼', '💊'];
 type TabIconProps = { color: string; size: number; focused: boolean };
 
 const ShopTabIcon = ({ focused }: TabIconProps) => (
-  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🛍️</Text>
+  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🛒</Text>
 );
 
 const CategoriesTabIcon = ({ focused }: TabIconProps) => (
-  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🗂️</Text>
+  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>📃</Text>
 );
 
 const AccountTabIcon = ({ focused }: TabIconProps) => (
-  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>👤</Text>
+  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🐨</Text>
 );
 
 const CategoriesScreen = () => {
@@ -130,6 +131,12 @@ const CustomerTabNavigator = ({
   route: { params?: { username?: string } };
 }) => {
   const username = route.params?.username;
+  const insets = useSafeAreaInsets();
+  const tabBarStyle = {
+    ...styles.tabBar,
+    height: 65 + insets.bottom,
+    paddingBottom: 12 + insets.bottom,
+  };
 
   return (
     <Tab.Navigator
@@ -138,7 +145,7 @@ const CustomerTabNavigator = ({
         headerTitleStyle: { color: '#0f172a', fontWeight: '700' },
         tabBarActiveTintColor: '#6d28d9',
         tabBarInactiveTintColor: '#64748b',
-        tabBarStyle: styles.tabBar,
+        tabBarStyle,
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
@@ -147,7 +154,7 @@ const CustomerTabNavigator = ({
         component={CustomerHomeScreen}
         initialParams={{ username }}
         options={{
-          title: 'Cửa hàng',
+          title: 'Tạp hóa Vanw Tiet',
           tabBarLabel: 'Sản phẩm',
           tabBarIcon: ShopTabIcon,
         }}
@@ -246,11 +253,11 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   avatarEmoji: {
-    fontSize: 30,
+    fontSize: 20,
   },
   accountName: {
     color: '#0f172a',
-    fontSize: 18,
+    fontSize: 12,
     fontWeight: '700',
     marginTop: 12,
   },
@@ -292,9 +299,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   tabBar: {
-    height: 62,
-    paddingTop: 5,
-    paddingBottom: 5,
+    height: 65,
+    paddingTop: 6,
+    paddingBottom: 12,
     borderTopColor: '#e2e8f0',
     backgroundColor: '#ffffff',
   },
