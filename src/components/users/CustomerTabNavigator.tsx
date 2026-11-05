@@ -1,17 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { launchImageLibrary } from 'react-native-image-picker';
 import CustomerHomeScreen from './CustomerHomeScreen';
-import { fetchCategories, initProjectDatabase } from '../../database/projectDb';
+import CartScreen from './CartScreen';
+import { useCart } from './CartContext';
+import {
+  fetchCategories,
+  getUserById,
+  getUserByUsername,
+  initProjectDatabase,
+  updateUserProfile,
+} from '../../database/projectDb';
 import type { Category } from '../../database/types';
 import type { RootStackParamList } from '../AppNavigatorProduct';
+import { getProductImageSource } from '../../utils/imageHelper';
 
-type CustomerTabParamList = {
-  Shop: { username?: string } | undefined;
-  Categories: { username?: string } | undefined;
-  Account: { username?: string } | undefined;
+export type CustomerTabParamList = {
+  Shop: { username?: string; userId?: number } | undefined;
+  Categories: { username?: string; userId?: number } | undefined;
+  Cart: { username?: string; userId?: number } | undefined;
+  Account: { username?: string; userId?: number } | undefined;
 };
 
 const Tab = createBottomTabNavigator<CustomerTabParamList>();
@@ -19,11 +39,15 @@ const categoryIcons = ['🧴', '🍼', '🍲', '🧼', '💊'];
 type TabIconProps = { color: string; size: number; focused: boolean };
 
 const ShopTabIcon = ({ focused }: TabIconProps) => (
-  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🛒</Text>
+  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🏡</Text>
 );
 
 const CategoriesTabIcon = ({ focused }: TabIconProps) => (
   <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>📃</Text>
+);
+
+const CartTabIcon = ({ focused }: TabIconProps) => (
+  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🛒</Text>
 );
 
 const AccountTabIcon = ({ focused }: TabIconProps) => (
@@ -42,8 +66,7 @@ const CategoriesScreen = () => {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>Danh mục sản phẩm</Text>
-      <Text style={styles.subtitle}>Chọn danh mục để khám phá sản phẩm.</Text>
+      <Text style={styles.subtitle}>Chọn danh mục để khám phá.</Text>
       {categories.map((category, index) => (
         <TouchableOpacity
           key={category.id}
@@ -75,10 +98,69 @@ const CategoriesScreen = () => {
 const AccountScreen = ({
   route,
 }: {
-  route: { params?: { username?: string } };
+  route: { params?: { username?: string; userId?: number } };
 }) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const username = route.params?.username;
+  const userId = route.params?.userId;
+  const [user, setUser] = useState<Awaited<ReturnType<typeof getUserById>>>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editUsername, setEditUsername] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [avatar, setAvatar] = useState('logo.png');
+
+  useEffect(() => {
+    const loadUser = userId
+      ? getUserById(userId)
+      : username
+        ? getUserByUsername(username)
+        : Promise.resolve(null);
+    loadUser.then((loadedUser) => {
+      setUser(loadedUser);
+      setEditUsername(loadedUser?.username || '');
+      setFullName(loadedUser?.fullName || '');
+      setPhone(loadedUser?.phone || '');
+      setAvatar(loadedUser?.avatar || 'logo.png');
+    }).catch((error: unknown) => {
+      console.error('Không thể tải hồ sơ người dùng:', error);
+      Alert.alert('Lỗi', 'Không thể tải thông tin tài khoản.');
+    });
+  }, [userId, username]);
+
+  const handlePickAvatar = () => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
+      if (response.didCancel) return;
+      if (response.errorCode) {
+        Alert.alert('Lỗi', response.errorMessage || 'Không thể mở thư viện ảnh.');
+        return;
+      }
+      const uri = response.assets?.[0]?.uri;
+      if (uri) setAvatar(uri);
+    });
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user || !editUsername.trim()) {
+      Alert.alert('Thiếu thông tin', 'Tên đăng nhập không được để trống.');
+      return;
+    }
+
+    const success = await updateUserProfile(user.id, {
+      username: editUsername.trim(),
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      avatar,
+    });
+    if (!success) {
+      Alert.alert('Lỗi', 'Không thể cập nhật hồ sơ. Tên đăng nhập có thể đã tồn tại.');
+      return;
+    }
+
+    setUser({ ...user, username: editUsername.trim(), fullName: fullName.trim(), phone: phone.trim(), avatar });
+    setIsEditing(false);
+    Alert.alert('Thành công', 'Thông tin tài khoản đã được cập nhật.');
+  };
 
   const handleLogout = () => {
     Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
@@ -92,26 +174,86 @@ const AccountScreen = ({
   };
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Tài khoản</Text>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.accountContent}>
       <View style={styles.accountCard}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarEmoji}>👤</Text>
-        </View>
-        <Text style={styles.accountName}>{username || 'Love'}</Text>
-        <Text style={styles.accountCaption}>
-          {username ? 'User' : 'Bạn chưa đăng nhập'}
-        </Text>
+        <Image
+          source={getProductImageSource(user?.avatar || 'logo1.png')}
+          style={styles.avatar}
+        />
+        {user && isEditing && (
+          <TouchableOpacity style={styles.avatarButton} onPress={handlePickAvatar}>
+            <Text style={styles.avatarButtonText}>Chọn ảnh đại diện</Text>
+          </TouchableOpacity>
+        )}
+        {user && isEditing ? (
+          <View style={styles.profileFields}>
+            <TextInput
+              style={styles.profileInput}
+              value={editUsername}
+              onChangeText={setEditUsername}
+              placeholder="Tên đăng nhập"
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={styles.profileInput}
+              value={fullName}
+              onChangeText={setFullName}
+              placeholder="Họ và tên"
+            />
+            <TextInput
+              style={styles.profileInput}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="Số điện thoại"
+              keyboardType="phone-pad"
+            />
+          </View>
+        ) : (
+          <>
+            <Text style={styles.accountName}>{user?.fullName || username || '!'}</Text>
+            <Text style={styles.accountCaption}>@{user?.username || username || 'guest'}</Text>
+            {user?.phone ? <Text style={styles.accountCaption}>{user.phone}</Text> : null}
+          </>
+        )}
       </View>
-      {username ? (
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          accessibilityRole="button"
-        >
-          <Text style={styles.logoutEmoji}>↪</Text>
-          <Text style={styles.logoutText}>Đăng xuất</Text>
-        </TouchableOpacity>
+      {user ? (
+        <>
+          {isEditing ? (
+            <View style={styles.profileActions}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setIsEditing(false)}>
+                <Text style={styles.cancelButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveProfileButton} onPress={handleSaveProfile}>
+                <Text style={styles.profileButtonText}>Lưu thông tin</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.profileActionButton}
+                onPress={() => setIsEditing(true)}
+                accessibilityRole="button"
+              >
+                <Text style={styles.profileButtonText}>Chỉnh sửa thông tin</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.profileActionButton}
+                onPress={() => navigation.navigate('OrderHistory', { userId: user.id })}
+                accessibilityRole="button"
+              >
+                <Text style={styles.profileButtonText}>Lịch sử mua hàng</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+                accessibilityRole="button"
+              >
+                <Text style={styles.logoutEmoji}>↪</Text>
+                <Text style={styles.logoutText}>Đăng xuất</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </>
       ) : (
         <TouchableOpacity
           style={styles.loginButton}
@@ -121,17 +263,19 @@ const AccountScreen = ({
           <Text style={styles.loginButtonText}>Đăng nhập</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const CustomerTabNavigator = ({
   route,
 }: {
-  route: { params?: { username?: string } };
+  route: { params?: { username?: string; userId?: number } };
 }) => {
   const username = route.params?.username;
+  const userId = route.params?.userId;
   const insets = useSafeAreaInsets();
+  const { itemCount } = useCart();
   const tabBarStyle = {
     ...styles.tabBar,
     height: 65 + insets.bottom,
@@ -152,7 +296,7 @@ const CustomerTabNavigator = ({
       <Tab.Screen
         name="Shop"
         component={CustomerHomeScreen}
-        initialParams={{ username }}
+        initialParams={{ username, userId }}
         options={{
           title: 'Tạp hóa Vanw Tiet',
           tabBarLabel: 'Sản phẩm',
@@ -162,7 +306,7 @@ const CustomerTabNavigator = ({
       <Tab.Screen
         name="Categories"
         component={CategoriesScreen}
-        initialParams={{ username }}
+        initialParams={{ username, userId }}
         options={{
           title: 'Danh mục',
           tabBarLabel: 'Danh mục',
@@ -170,9 +314,20 @@ const CustomerTabNavigator = ({
         }}
       />
       <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        initialParams={{ username, userId }}
+        options={{
+          title: 'Giỏ hàng',
+          tabBarLabel: 'Giỏ hàng',
+          tabBarIcon: CartTabIcon,
+          tabBarBadge: itemCount > 0 ? itemCount : undefined,
+        }}
+      />
+      <Tab.Screen
         name="Account"
         component={AccountScreen}
-        initialParams={{ username }}
+        initialParams={{ username, userId }}
         options={{
           title: 'Tài khoản',
           tabBarLabel: 'Tài khoản',
@@ -244,16 +399,77 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
     borderRadius: 16,
   },
+  accountContent: {
+    padding: 16,
+    paddingBottom: 28,
+  },
   avatar: {
     width: 64,
     height: 64,
+    resizeMode: 'cover',
+    borderRadius: 32,
+  },
+  avatarButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 10,
+    backgroundColor: '#ede9fe',
+    borderRadius: 8,
+  },
+  avatarButtonText: {
+    color: '#6d28d9',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  profileFields: {
+    width: '100%',
+    marginTop: 16,
+  },
+  profileInput: {
+    minHeight: 44,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    color: '#0f172a',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 9,
+  },
+  profileActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  profileActionButton: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    backgroundColor: '#7c3aed',
+    borderRadius: 10,
+  },
+  saveProfileButton: {
+    flex: 1,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#7c3aed',
-    borderRadius: 32,
+    borderRadius: 10,
   },
-  avatarEmoji: {
-    fontSize: 20,
+  cancelButton: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#64748b',
+    borderRadius: 10,
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  profileButtonText: {
+    color: '#fff',
+    fontWeight: '700',
   },
   accountName: {
     color: '#0f172a',

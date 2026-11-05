@@ -6,6 +6,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import CustomerTabNavigator from './users/CustomerTabNavigator';
 import ProductDetailScreen from './users/ProductDetailScreen';
 import ProductsByCategoryScreen from './users/ProductByCategoryScreen';
+import OrderHistoryScreen from './users/OrderHistoryScreen';
+import { CartProvider } from './users/CartContext';
 import LoginScreen from './LoginScreen';
 import RegisterScreen from './RegisterScreen';
 import AdminTabNavigator from './admin/AdminTabNavigator';
@@ -13,10 +15,11 @@ import type { Product } from '../database/types';
 
 // Khai báo kiểu tham số cho các màn hình trong luồng xác thực và cửa hàng.
 export type RootStackParamList = {
-  CustomerTabs: { username?: string } | undefined;
-  AdminHome: undefined;
+  CustomerTabs: { username?: string; userId?: number } | undefined;
+  AdminHome: { username?: string; fullName?: string; userId?: number } | undefined;
   ProductDetail: { product: Product };
   ProductsByCategory: { categoryId: number; categoryName?: string };
+  OrderHistory: { userId: number };
   Login: { username?: string } | undefined;
   Register: undefined;
 };
@@ -41,6 +44,7 @@ const LogoutHeaderButton = () => {
 
 export default function AppNavigatorProduct() {
   return (
+    <CartProvider>
     <Stack.Navigator initialRouteName="CustomerTabs">
       {/* Ứng dụng bắt đầu ở homeuser screen; chưa đăng nhập vẫn vào được cửa hàng. */}
       <Stack.Screen
@@ -65,10 +69,10 @@ export default function AppNavigatorProduct() {
       <Stack.Screen
         name="AdminHome"
         component={AdminTabNavigator}
-        options={{
-          title: 'Trang chủ quản trị',
+        options={({ route }) => ({
+          title: route.params?.fullName || route.params?.username || 'Trang chủ quản trị',
           headerRight: LogoutHeaderButton,
-        }}
+        })}
       />
 
       <Stack.Screen
@@ -84,7 +88,13 @@ export default function AppNavigatorProduct() {
           title: route.params.categoryName || 'Sản phẩm theo loại',
         })}
       />
+      <Stack.Screen
+        name="OrderHistory"
+        component={OrderHistoryScreen}
+        options={{ title: 'Lịch sử mua hàng' }}
+      />
     </Stack.Navigator>
+    </CartProvider>
   );
 }
 

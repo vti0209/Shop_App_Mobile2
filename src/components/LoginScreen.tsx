@@ -62,8 +62,11 @@ const LoginScreen = ({ navigation, route }: Props) => {
         index: 0,
         routes: [
           user.role === 'admin'
-            ? { name: 'AdminHome' }
-            : { name: 'CustomerTabs', params: { username: user.username } },
+            ? {
+                name: 'AdminHome',
+                params: { username: user.username, fullName: user.fullName, userId: user.id },
+              }
+            : { name: 'CustomerTabs', params: { username: user.username, userId: user.id } },
         ],
       });
     } catch (error) {
@@ -171,6 +174,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: 10,
+    fontSize: 12,
   },
   primaryButton: {
     minHeight: 50,

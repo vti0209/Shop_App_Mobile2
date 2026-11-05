@@ -8,11 +8,19 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Image,
   SafeAreaView,
   TextInput,
 } from 'react-native';
-import { fetchUsers, updateUser, deleteUser, addUser } from '../../database/projectDb';
+import { launchImageLibrary } from 'react-native-image-picker';
+import {
+  fetchUsers,
+  updateUser,
+  deleteUser,
+  addUser,
+} from '../../database/projectDb';
 import { User } from '../../database/types';
+import { getProductImageSource } from '../../utils/imageHelper';
 
 interface AdminUserScreenProps {
   onBack?: () => void;
@@ -24,6 +32,8 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [avatar, setAvatar] = useState('logo.png');
   const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -39,6 +49,8 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
     setUsername('');
     setPassword('');
     setFullName('');
+    setPhone('');
+    setAvatar('logo.png');
     setEditingId(null);
   };
 
@@ -55,12 +67,16 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
       ? await updateUser(editingId, {
         username: username.trim(),
         fullName: fullName.trim(),
+        phone: phone.trim(),
+        avatar,
         password: password.trim() || undefined,
       })
       : await addUser({
         username: username.trim(),
         password: password.trim(),
         fullName: fullName.trim(),
+        phone: phone.trim(),
+        avatar,
         role: 'user',
       });
 
@@ -78,8 +94,22 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
     setUsername(user.username);
     setPassword('');
     setFullName(user.fullName || '');
+    setPhone(user.phone || '');
+    setAvatar(user.avatar || 'logo.png');
     setEditingId(user.id);
     setShowAddForm(true);
+  };
+
+  const handlePickAvatar = () => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
+      if (response.didCancel) return;
+      if (response.errorCode) {
+        Alert.alert('Lỗi', response.errorMessage || 'Không thể mở thư viện ảnh.');
+        return;
+      }
+      const uri = response.assets?.[0]?.uri;
+      if (uri) setAvatar(uri);
+    });
   };
 
   const handleDeleteUser = (user: User) => {
@@ -97,7 +127,11 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
           text: 'Xóa',
           style: 'destructive',
           onPress: async () => {
-            await deleteUser(user.id);
+            const success = await deleteUser(user.id);
+            if (!success) {
+              Alert.alert('Lỗi', 'Không thể xóa người dùng.');
+              return;
+            }
             loadUsers();
           },
         },
@@ -113,7 +147,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
             <Text style={styles.usernameText} numberOfLines={1}>
               {index + 1}. {item.username}
             </Text>
-            <View style={[styles.roleBadge, styles.roleUser]}>
+            <View style={[styles.roleBadge, item.role === 'admin' ? styles.roleAdmin : styles.roleUser]}>
               <Text style={styles.roleText}>{item.role.toUpperCase()}</Text>
             </View>
           </View>
@@ -209,6 +243,20 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
               value={fullName}
               onChangeText={setFullName}
             />
+            <TextInput
+              style={styles.input}
+              placeholder="Số điện thoại"
+              placeholderTextColor="#94a3b8"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+            />
+            <View style={styles.avatarEditRow}>
+              <Image source={getProductImageSource(avatar)} style={styles.avatarPreview} />
+              <TouchableOpacity style={styles.avatarPicker} onPress={handlePickAvatar}>
+                <Text style={styles.avatarPickerText}>Chọn ảnh đại diện</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.formActions}>
               {editingId !== null && (
@@ -359,6 +407,29 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
   },
+  avatarEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  avatarPreview: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    resizeMode: 'cover',
+  },
+  avatarPicker: {
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    backgroundColor: '#ede9fe',
+    borderRadius: 8,
+  },
+  avatarPickerText: {
+    color: '#6d28d9',
+    fontSize: 13,
+    fontWeight: '700',
+  },
   userCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -394,6 +465,9 @@ const styles = StyleSheet.create({
   roleUser: {
     backgroundColor: '#0d6efd',
   },
+  roleAdmin: {
+    backgroundColor: '#dc3545',
+  },
   roleText: {
     color: '#fff',
     fontSize: 5,
@@ -409,8 +483,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 8,
-    maxWidth: '52%',
+    gap: 6,
+    maxWidth: '62%',
   },
   actionButton: {
     minWidth: 40,

@@ -176,6 +176,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: 10,
+    fontSize: 12,
   },
   primaryButton: {
     minHeight: 50,

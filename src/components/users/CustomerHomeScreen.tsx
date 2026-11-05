@@ -1,6 +1,7 @@
 // Trang chủ khách hàng chỉ hiển thị sản phẩm; không có các thao tác quản trị.
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   FlatList,
   Image,
   TextInput,
@@ -15,18 +16,22 @@ import CategorySelector from './CategorySelector';
 import { fetchCategories, fetchProducts, initProjectDatabase } from '../../database/projectDb';
 import type { Category, Product } from '../../database/types';
 import { getProductImageSource } from '../../utils/imageHelper';
+import { useCart } from './CartContext';
 
 type CustomerNavigation = NavigationProp<RootStackParamList>;
 const allProductsCategory: Category = { id: 0, name: 'Tất cả' };
+const PRODUCTS_PER_PAGE = 6;
 
 const CustomerHomeScreen = () => {
   const navigation = useNavigation<CustomerNavigation>();
+  const { addToCart } = useCart();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Bước 1: Khởi tạo cùng database với đăng nhập và tải danh mục, sản phẩm.
   useEffect(() => {
@@ -62,20 +67,41 @@ const CustomerHomeScreen = () => {
     () => [allProductsCategory, ...categories],
     [categories]
   );
+  const totalPages = Math.max(1, Math.ceil(visibleProducts.length / PRODUCTS_PER_PAGE));
+  const pageProducts = visibleProducts.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategoryId, searchKeyword]);
 
   // Bước 3: Mở trang chi tiết khi người dùng chọn sản phẩm.
   const renderProduct = ({ item }: { item: Product }) => (
-    <TouchableOpacity
-      style={styles.productCard}
-      activeOpacity={0.8}
-      onPress={() => navigation.navigate('ProductDetail', { product: item })}
-      accessibilityRole="button"
-      accessibilityLabel={`Xem chi tiết ${item.name}`}
-    >
-      <Image source={getProductImageSource(item.img)} style={styles.productImage} />
-      <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-      <Text style={styles.productPrice}>{item.price.toLocaleString('vi-VN')} đ</Text>
-    </TouchableOpacity>
+    <View style={styles.productCard}>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('ProductDetail', { product: item })}
+        accessibilityRole="button"
+        accessibilityLabel={`Xem chi tiết ${item.name}`}
+      >
+        <Image source={getProductImageSource(item.img)} style={styles.productImage} />
+        <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.productPrice}>{item.price.toLocaleString('vi-VN')} đ</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.addToCartButton}
+        onPress={() => {
+          addToCart(item);
+          Alert.alert('Đã thêm vào giỏ', `${item.name} đã được thêm vào giỏ hàng.`);
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`Thêm ${item.name} vào giỏ hàng`}
+      >
+        <Text style={styles.addToCartText}>Thêm vào giỏ</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   const selectedCategoryName =
@@ -149,17 +175,49 @@ const CustomerHomeScreen = () => {
         <Text style={styles.productCount}>{visibleProducts.length} sản phẩm</Text>
       </View>
       <FlatList
-        data={visibleProducts}
-        numColumns={2}
+        data={pageProducts}
+        numColumns={3}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderProduct}
         columnWrapperStyle={styles.productRow}
         contentContainerStyle={styles.productList}
         showsVerticalScrollIndicator={false}
+        extraData={currentPage}
         ListEmptyComponent={
           <Text style={styles.emptyText}>Chưa có sản phẩm để hiển thị.</Text>
         }
       />
+      {visibleProducts.length > 0 && (
+        <View style={styles.pagination}>
+          <TouchableOpacity
+            style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+            onPress={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            disabled={currentPage === 1}
+            accessibilityRole="button"
+            accessibilityLabel="Trang trước"
+          >
+            <Text style={[styles.pageButtonText, currentPage === 1 && styles.pageButtonTextDisabled]}>
+              ‹ Trước
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.pageIndicator}>
+            <Text style={styles.pageNumber}>{currentPage}</Text>
+            <Text style={styles.pageDivider}>/</Text>
+            <Text style={styles.pageTotal}>{totalPages}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+            onPress={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+            disabled={currentPage === totalPages}
+            accessibilityRole="button"
+            accessibilityLabel="Trang sau"
+          >
+            <Text style={[styles.pageButtonText, currentPage === totalPages && styles.pageButtonTextDisabled]}>
+              Sau ›
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -278,39 +336,101 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   productRow: {
-    gap: 10,
+    gap: 8,
   },
   productCard: {
     flex: 1,
     minWidth: 0,
-    padding: 9,
-    marginBottom: 12,
+    padding: 7,
+    marginBottom: 9,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    borderRadius: 14,
+    borderRadius: 13,
     elevation: 2,
+  },
+  addToCartButton: {
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    backgroundColor: '#009760',
+    borderRadius: 9,
+  },
+  addToCartText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '700',
   },
   productImage: {
     width: '100%',
-    height: 132,
-    marginBottom: 10,
+    height: 86,
+    marginBottom: 7,
     resizeMode: 'contain',
     backgroundColor: '#f1f5f9',
-    borderRadius: 10,
+    borderRadius: 9,
   },
   productName: {
-    minHeight: 38,
+    minHeight: 34,
     color: '#1e293b',
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: '700',
   },
   productPrice: {
     color: '#be123c',
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '700',
-    marginTop: 8,
+    marginTop: 5,
+  },
+  pagination: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 8,
+    marginBottom: 8,
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+  },
+  pageButton: {
+    minWidth: 88,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    backgroundColor: '#7c3aed',
+    borderRadius: 10,
+  },
+  pageButtonDisabled: {
+    backgroundColor: '#f1f5f9',
+  },
+  pageButtonText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  pageButtonTextDisabled: {
+    color: '#94a3b8',
+  },
+  pageIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  pageNumber: {
+    color: '#6d28d9',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  pageDivider: {
+    color: '#94a3b8',
+    fontSize: 13,
+  },
+  pageTotal: {
+    color: '#64748b',
+    fontSize: 13,
+    fontWeight: '600',
   },
   emptyText: {
     width: '100%',

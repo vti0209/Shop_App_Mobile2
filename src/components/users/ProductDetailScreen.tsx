@@ -1,6 +1,6 @@
 // Trang chi tiết sản phẩm
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import { Alert, View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fetchCategories } from '../../database/projectDb';
@@ -8,6 +8,7 @@ import type { Category } from '../../database/types';
 import CategorySelector from './CategorySelector';
 import { RootStackParamList } from '../AppNavigatorProduct';
 import { getProductImageSource } from '../../utils/imageHelper';
+import { useCart } from './CartContext';
 
 type ProductDetailRouteProp = RouteProp<RootStackParamList, 'ProductDetail'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProductsByCategory'>;
@@ -16,6 +17,7 @@ const ProductDetailScreen = () => {
   const route = useRoute<ProductDetailRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { product } = route.params;
+  const { addToCart } = useCart();
 
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -51,6 +53,17 @@ const ProductDetailScreen = () => {
       <View style={styles.infoCard}>
         <Text style={styles.name}>{product.name}</Text>
         <Text style={styles.price}>{product.price.toLocaleString('vi-VN')} đ</Text>
+        <TouchableOpacity
+          style={styles.addToCartButton}
+          onPress={() => {
+            addToCart(product);
+            Alert.alert('Đã thêm vào giỏ', `${product.name} đã được thêm vào giỏ hàng.`);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Thêm vào giỏ hàng"
+        >
+          <Text style={styles.addToCartText}>🛒 Thêm vào giỏ hàng</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Danh mục sản phẩm liên quan */}
@@ -108,6 +121,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#e11d48',
+  },
+  addToCartButton: {
+    minHeight: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+    backgroundColor: '#009760',
+    borderRadius: 10,
+  },
+  addToCartText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
   },
   categorySection: {
     backgroundColor: '#ffffff',

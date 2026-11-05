@@ -1,7 +1,7 @@
 // src/database/projectDb.ts
 // CSDL SQLite dành riêng cho Đồ án Cuối kỳ Lập trình Di động 2
 import SQLite, { SQLiteDatabase } from 'react-native-sqlite-storage';
-import { User, Category, Product } from './types';
+import { User, Category, Product, Order, CartItem } from './types';
 
 SQLite.enablePromise(true);
 
@@ -167,6 +167,7 @@ export const initProjectDatabase = async (onSuccess?: () => void): Promise<void>
           password TEXT NOT NULL,
           fullName TEXT,
           phone TEXT,
+          avatar TEXT,
           role TEXT NOT NULL DEFAULT 'user',
           createdAt TEXT DEFAULT CURRENT_TIMESTAMP
         )
@@ -252,6 +253,14 @@ export const initProjectDatabase = async (onSuccess?: () => void): Promise<void>
       `);
     });
 
+    const [userColumns] = await db.executeSql('PRAGMA table_info(users)');
+    const hasAvatarColumn = Array.from({ length: userColumns.rows.length }, (_, index) =>
+      userColumns.rows.item(index).name
+    ).includes('avatar');
+    if (!hasAvatarColumn) {
+      await db.executeSql('ALTER TABLE users ADD COLUMN avatar TEXT');
+    }
+
     console.log('✅ [ProjectDb] Khởi tạo CSDL dự án lớn thành công!');
     if (onSuccess) onSuccess();
   } catch (error) {
@@ -304,8 +313,15 @@ export const addUser = async (user: Omit<User, 'id'>): Promise<boolean> => {
   try {
     const db = await getProjectDb();
     await db.executeSql(
-      'INSERT INTO users (username, password, fullName, phone, role) VALUES (?, ?, ?, ?, ?)',
-      [user.username, user.password || '123456', user.fullName || '', user.phone || '', user.role || 'user']
+      'INSERT INTO users (username, password, fullName, phone, avatar, role) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        user.username,
+        user.password || '123456',
+        user.fullName || '',
+        user.phone || '',
+        user.avatar || null,
+        user.role || 'user',
+      ]
     );
     return true;
   } catch (error) {
@@ -316,18 +332,61 @@ export const addUser = async (user: Omit<User, 'id'>): Promise<boolean> => {
 
 export const updateUser = async (
   id: number,
-  user: Pick<User, 'username' | 'fullName'> & { password?: string }
+  user: Pick<User, 'username' | 'fullName'> &
+    Partial<Pick<User, 'phone' | 'avatar'>> & { password?: string }
 ): Promise<boolean> => {
   try {
     const db = await getProjectDb();
     await db.executeSql(
-      'UPDATE users SET username = ?, fullName = ?, password = COALESCE(?, password) WHERE id = ?',
-      [user.username, user.fullName || '', user.password || null, id]
+      `UPDATE users
+       SET username = ?, fullName = ?, phone = COALESCE(?, phone),
+           avatar = COALESCE(?, avatar), password = COALESCE(?, password)
+       WHERE id = ?`,
+      [user.username, user.fullName || '', user.phone ?? null, user.avatar ?? null, user.password || null, id]
     );
     return true;
   } catch (error) {
     console.error('❌ Lỗi cập nhật người dùng:', error);
     return false;
+  }
+};
+
+export const updateUserProfile = async (
+  id: number,
+  user: Pick<User, 'username' | 'fullName' | 'phone' | 'avatar'>
+): Promise<boolean> => {
+  try {
+    const db = await getProjectDb();
+    await db.executeSql(
+      'UPDATE users SET username = ?, fullName = ?, phone = ?, avatar = ? WHERE id = ?',
+      [user.username, user.fullName || '', user.phone || '', user.avatar || null, id]
+    );
+    return true;
+  } catch (error) {
+    console.error('❌ Lỗi cập nhật hồ sơ người dùng:', error);
+    return false;
+  }
+};
+
+export const getUserByUsername = async (username: string): Promise<User | null> => {
+  try {
+    const db = await getProjectDb();
+    const [results] = await db.executeSql('SELECT * FROM users WHERE username = ?', [username]);
+    return results.rows.length > 0 ? results.rows.item(0) : null;
+  } catch (error) {
+    console.error('❌ Lỗi tải hồ sơ người dùng:', error);
+    throw error;
+  }
+};
+
+export const getUserById = async (id: number): Promise<User | null> => {
+  try {
+    const db = await getProjectDb();
+    const [results] = await db.executeSql('SELECT * FROM users WHERE id = ?', [id]);
+    return results.rows.length > 0 ? results.rows.item(0) : null;
+  } catch (error) {
+    console.error('❌ Lỗi tải hồ sơ người dùng:', error);
+    throw error;
   }
 };
 
@@ -490,6 +549,126 @@ export const deleteProduct = async (id: number): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error('❌ Lỗi xóa sản phẩm:', error);
+    return false;
+  }
+};
+
+export const createOrder = async (
+  userId: number,
+  details: Pick<Order, 'customerName' | 'customerPhone' | 'customerAddress' | 'totalAmount'>,
+  items: CartItem[]
+): Promise<boolean> => {
+  try {
+    const db = await getProjectDb();
+    await new Promise<void>((resolve, reject) => {
+      db.transaction(
+        (tx) => {
+          tx.executeSql(
+            `INSERT INTO orders
+              (userId, customerName, customerPhone, customerAddress, totalAmount, status)
+             VALUES (?, ?, ?, ?, ?, 'PENDING')`,
+            [
+              userId,
+              details.customerName,
+              details.customerPhone,
+              details.customerAddress,
+              details.totalAmount,
+            ],
+            (transaction, result) => {
+              const orderId = result.insertId;
+              if (!orderId) {
+                reject(new Error('Không tạo được mã đơn hàng.'));
+                return;
+              }
+
+              items.forEach(({ product, quantity }) => {
+                transaction.executeSql(
+                  `INSERT INTO order_items
+                    (orderId, productId, productName, price, quantity, img)
+                   VALUES (?, ?, ?, ?, ?, ?)`,
+                  [orderId, product.id, product.name, product.price, quantity, product.img]
+                );
+              });
+            }
+          );
+        },
+        reject,
+        () => resolve()
+      );
+    });
+    return true;
+  } catch (error) {
+    console.error('❌ Lỗi tạo đơn hàng:', error);
+    return false;
+  }
+};
+
+export const fetchOrdersByUser = async (userId: number): Promise<Order[]> => {
+  try {
+    const db = await getProjectDb();
+    const [results] = await db.executeSql(
+      'SELECT * FROM orders WHERE userId = ? ORDER BY createdAt DESC',
+      [userId]
+    );
+    const orders: Order[] = [];
+    for (let index = 0; index < results.rows.length; index += 1) {
+      const order = results.rows.item(index) as Order;
+      const [itemsResult] = await db.executeSql(
+        'SELECT * FROM order_items WHERE orderId = ? ORDER BY id ASC',
+        [order.id]
+      );
+      const items = [];
+      for (let itemIndex = 0; itemIndex < itemsResult.rows.length; itemIndex += 1) {
+        items.push(itemsResult.rows.item(itemIndex));
+      }
+      orders.push({ ...order, items });
+    }
+    return orders;
+  } catch (error) {
+    console.error('❌ Lỗi tải lịch sử đơn hàng:', error);
+    throw error;
+  }
+};
+
+export const fetchAllOrders = async (): Promise<Order[]> => {
+  try {
+    const db = await getProjectDb();
+    const [results] = await db.executeSql(`
+      SELECT orders.*, users.username AS customerUsername
+      FROM orders
+      LEFT JOIN users ON users.id = orders.userId
+      ORDER BY orders.createdAt DESC, orders.id DESC
+    `);
+    const orders: Order[] = [];
+    for (let index = 0; index < results.rows.length; index += 1) {
+      const order = results.rows.item(index) as Order;
+      const [itemsResult] = await db.executeSql(
+        'SELECT * FROM order_items WHERE orderId = ? ORDER BY id ASC',
+        [order.id]
+      );
+      const items = [];
+      for (let itemIndex = 0; itemIndex < itemsResult.rows.length; itemIndex += 1) {
+        items.push(itemsResult.rows.item(itemIndex));
+      }
+      orders.push({ ...order, items });
+    }
+    return orders;
+  } catch (error) {
+    console.error('❌ Lỗi tải danh sách đơn hàng:', error);
+    throw error;
+  }
+};
+
+export const updateOrderStatus = async (
+  orderId: number,
+  status: Order['status']
+): Promise<boolean> => {
+  try {
+    const db = await getProjectDb();
+    await db.executeSql('UPDATE orders SET status = ? WHERE id = ?', [status, orderId]);
+    return true;
+  } catch (error) {
+    console.error('❌ Lỗi cập nhật trạng thái đơn hàng:', error);
     return false;
   }
 };

@@ -7,6 +7,7 @@ export interface User {
   password?: string;
   fullName?: string;
   phone?: string;
+  avatar?: string;
   role: 'admin' | 'user';
   createdAt?: string;
 }
@@ -40,6 +41,7 @@ export interface OrderItem {
 export interface Order {
   id: number;
   userId: number;
+  customerUsername?: string;
   customerName: string;
   customerPhone: string;
   customerAddress: string;
@@ -47,4 +49,9 @@ export interface Order {
   status: 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
   items?: OrderItem[];
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
 }

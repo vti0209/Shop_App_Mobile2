@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../AppNavigatorProduct';
@@ -7,19 +7,28 @@ import { fetchCategories, fetchProductsByCategory } from '../../database/project
 import type { Category, Product } from '../../database/types';
 import CategorySelector from './CategorySelector';
 import { getProductImageSource } from '../../utils/imageHelper';
+import { useCart } from './CartContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProductsByCategory'>;
 type RouteProps = RouteProp<RootStackParamList, 'ProductsByCategory'>;
+const PRODUCTS_PER_PAGE = 6;
 
 export default function ProductsByCategoryScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
+  const { addToCart } = useCart();
 
   const { categoryId } = route.params;
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
+  const pageProducts = products.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE
+  );
 
   useEffect(() => {
     fetchCategories().then((cats) => {
@@ -35,6 +44,7 @@ export default function ProductsByCategoryScreen() {
   // Đồng bộ tiêu đề trên thanh điều hướng mỗi khi đổi loại
   const handleSelectCategory = (id: number) => {
     setSelectedCategoryId(id);
+    setCurrentPage(1);
     const found = categories.find((c) => c.id === id);
     if (found) {
       navigation.setOptions({ title: found.name });
@@ -42,20 +52,32 @@ export default function ProductsByCategoryScreen() {
   };
 
   const renderProductItem = ({ item }: { item: Product }) => (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      style={styles.card}
-      onPress={() => navigation.navigate('ProductDetail', { product: item })}
-    >
-      <Image source={getProductImageSource(item.img)} style={styles.image} />
-      <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={2}>
-          {item.name}
-        </Text>
-        <Text style={styles.price}>{item.price.toLocaleString('vi-VN')} đ</Text>
-      </View>
-      <Text style={styles.arrowIcon}>›</Text>
-    </TouchableOpacity>
+    <View style={styles.card}>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        style={styles.cardContent}
+        onPress={() => navigation.navigate('ProductDetail', { product: item })}
+      >
+        <Image source={getProductImageSource(item.img)} style={styles.image} />
+        <View style={styles.info}>
+          <Text style={styles.name} numberOfLines={2}>
+            {item.name}
+          </Text>
+          <Text style={styles.price}>{item.price.toLocaleString('vi-VN')} đ</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.addToCartButton}
+        onPress={() => {
+          addToCart(item);
+          Alert.alert('Đã thêm vào giỏ', `${item.name} đã được thêm vào giỏ hàng.`);
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`Thêm ${item.name} vào giỏ hàng`}
+      >
+        <Text style={styles.addToCartText}>Thêm vào giỏ</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -76,17 +98,51 @@ export default function ProductsByCategoryScreen() {
       </View>
 
       <FlatList
-        data={products}
+        data={pageProducts}
+        numColumns={3}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderProductItem}
+        columnWrapperStyle={styles.productRow}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        extraData={currentPage}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>Không có sản phẩm nào thuộc loại này</Text>
           </View>
         }
       />
+      {products.length > 0 && (
+        <View style={styles.pagination}>
+          <TouchableOpacity
+            style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+            onPress={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            disabled={currentPage === 1}
+            accessibilityRole="button"
+            accessibilityLabel="Trang trước"
+          >
+            <Text style={[styles.pageButtonText, currentPage === 1 && styles.pageButtonTextDisabled]}>
+              ‹ Trước
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.pageIndicator}>
+            <Text style={styles.pageNumber}>{currentPage}</Text>
+            <Text style={styles.pageDivider}>/</Text>
+            <Text style={styles.pageTotal}>{totalPages}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+            onPress={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+            disabled={currentPage === totalPages}
+            accessibilityRole="button"
+            accessibilityLabel="Trang sau"
+          >
+            <Text style={[styles.pageButtonText, currentPage === totalPages && styles.pageButtonTextDisabled]}>
+              Sau ›
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -118,47 +174,84 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 8,
+  },
+  productRow: {
+    gap: 8,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    marginBottom: 10,
+    flex: 1,
+    minWidth: 0,
+    padding: 7,
+    marginBottom: 9,
     backgroundColor: '#ffffff',
-    borderRadius: 10,
+    borderRadius: 13,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    elevation: 2,
   },
-  image: {
-    width: 72,
-    height: 72,
+  cardContent: {
+    alignItems: 'stretch',
+  },
+  addToCartButton: {
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    backgroundColor: '#009760',
     borderRadius: 8,
-    marginRight: 12,
+  },
+  addToCartText: { color: '#fff', fontSize: 9.5, fontWeight: '700' },
+  image: {
+    width: '100%',
+    height: 78,
+    borderRadius: 8,
+    marginBottom: 6,
     resizeMode: 'contain',
     backgroundColor: '#f1f5f9',
   },
   info: {
-    flex: 1,
     minWidth: 0,
     justifyContent: 'center',
   },
   name: {
-    fontSize: 14,
-    fontWeight: '600',
+    minHeight: 30,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '700',
     color: '#1e293b',
-    marginBottom: 4,
   },
   price: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#e11d48',
+    marginTop: 4,
   },
-  arrowIcon: {
-    fontSize: 22,
-    color: '#94a3b8',
-    paddingHorizontal: 6,
+  pagination: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+    marginBottom: 20,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
   },
+  pageButton: {
+    minWidth: 88,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    backgroundColor: '#7c3aed',
+    borderRadius: 10,
+  },
+  pageButtonDisabled: { backgroundColor: '#f1f5f9' },
+  pageButtonText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+  pageButtonTextDisabled: { color: '#94a3b8' },
+  pageIndicator: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  pageNumber: { color: '#6d28d9', fontSize: 16, fontWeight: '800' },
+  pageDivider: { color: '#94a3b8', fontSize: 13 },
+  pageTotal: { color: '#64748b', fontSize: 13, fontWeight: '600' },
   emptyContainer: {
     paddingVertical: 40,
     alignItems: 'center',

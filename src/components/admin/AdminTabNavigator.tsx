@@ -6,12 +6,14 @@ import AdminHomeScreen from './AdminHomeScreen';
 import AdminUserScreen from './AdminUserScreen';
 import AdminCategoryScreen from './AdminCategoryScreen';
 import AdminProductScreen from './AdminProductScreen';
+import AdminOrdersScreen from './AdminOrdersScreen';
 
 export type AdminTabParamList = {
   Overview: undefined;
   Users: undefined;
   Categories: undefined;
   Products: undefined;
+  Orders: undefined;
 };
 
 type TabIconProps = { focused: boolean };
@@ -32,6 +34,10 @@ const CategoriesTabIcon = ({ focused }: TabIconProps) => (
 
 const ProductsTabIcon = ({ focused }: TabIconProps) => (
   <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>📋</Text>
+);
+
+const OrdersTabIcon = ({ focused }: TabIconProps) => (
+  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>📦</Text>
 );
 
 const AdminTabNavigator = () => {
@@ -66,7 +72,7 @@ const AdminTabNavigator = () => {
         component={AdminUserScreen}
         options={{
           title: 'Người dùng',
-          tabBarLabel: 'Người dùng',
+          tabBarLabel: 'User',
           tabBarIcon: UsersTabIcon,
         }}
       />
@@ -86,6 +92,15 @@ const AdminTabNavigator = () => {
           title: 'Sản phẩm',
           tabBarLabel: 'Sản phẩm',
           tabBarIcon: ProductsTabIcon,
+        }}
+      />
+      <Tab.Screen
+        name="Orders"
+        component={AdminOrdersScreen}
+        options={{
+          title: 'Quản lý hàng',
+          tabBarLabel: 'Hàng',
+          tabBarIcon: OrdersTabIcon,
         }}
       />
     </Tab.Navigator>
