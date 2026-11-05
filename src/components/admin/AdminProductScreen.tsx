@@ -85,7 +85,7 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
       return;
     }
     if (!categoryId) {
-      Alert.alert('Thông báo', 'Vui lòng chọn loại sản phẩm!');
+      Alert.alert('Thông báo', 'Vui lòng chọn danh mục!');
       return;
     }
 
@@ -162,7 +162,7 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
       </View>
       <View style={styles.actionColumn}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.editActionButton]}
+          style={[styles.actionButton]}
           onPress={() => handleEdit(item)}
           accessibilityRole="button"
           accessibilityLabel="Sửa"
@@ -171,7 +171,7 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
           <Text style={styles.actionIcon}>✏️</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionButton, styles.deleteActionButton]}
+          style={[styles.actionButton]}
           onPress={() => handleDelete(item.id)}
           accessibilityRole="button"
           accessibilityLabel="Xóa"
@@ -219,10 +219,10 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
             onChangeText={setPrice}
           />
 
-          {/* Chọn loại sản phẩm */}
+          {/* Chọn danh mục */}
           <View style={styles.pickerBox}>
             <RNPickerSelect
-              placeholder={{ label: '-- Chọn loại sản phẩm --', value: null }}
+              placeholder={{ label: '-- Chọn danh mục --', value: null }}
               value={categoryId}
               onValueChange={(val) => setCategoryId(val)}
               items={categories.map((c) => ({
@@ -258,7 +258,7 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
             )}
             <TouchableOpacity style={styles.btnSave} onPress={handleSave}>
               <Text style={styles.btnSaveText}>
-                {editingId !== null ? 'Cập nhật' : '➕ Thêm sản phẩm'}
+                {editingId !== null ? 'Cập nhật' : '✍️Thêm '}
               </Text>
             </TouchableOpacity>
           </View>
@@ -457,7 +457,5 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     includeFontPadding: false,
   },
-  editActionButton: { backgroundColor: '#0f766e' },
-  deleteActionButton: { backgroundColor: '#dc2626' },
   emptyText: { textAlign: 'center', color: '#888', marginTop: 15 },
 });

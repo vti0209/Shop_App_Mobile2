@@ -1,5 +1,5 @@
 // src/components/admin/AdminCategoryScreen.tsx
-// Chức năng 16: Quản trị Loại sản phẩm
+// Chức năng 16: Quản trị Danh mục
 import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
@@ -46,7 +46,7 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Thông báo', 'Vui lòng nhập tên loại sản phẩm!');
+      Alert.alert('Thông báo', 'Vui lòng nhập tên danh mục!');
       return;
     }
 
@@ -56,10 +56,10 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
         name: name.trim(),
         description: description.trim(),
       });
-      Alert.alert('Thành công', 'Đã cập nhật loại sản phẩm!');
+      Alert.alert('Thành công', 'Đã cập nhật danh mục!');
     } else {
       await addCategory(name.trim(), description.trim());
-      Alert.alert('Thành công', 'Đã thêm loại sản phẩm mới!');
+      Alert.alert('Thành công', 'Đã thêm danh mục mới!');
     }
     clearForm();
     loadCategories();
@@ -74,7 +74,7 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
   const handleDelete = (cat: Category) => {
     Alert.alert(
       'Xác nhận xóa',
-      `Bạn có chắc muốn xóa loại sản phẩm "${cat.name}"?`,
+      `Bạn có chắc muốn xóa danh mục "${cat.name}"?`,
       [
         { text: 'Hủy', style: 'cancel' },
         {
@@ -100,7 +100,7 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
       </View>
       <View style={styles.catActions}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.editActionButton]}
+          style={[styles.actionButton]}
           onPress={() => handleEdit(item)}
           accessibilityRole="button"
           accessibilityLabel="Sửa"
@@ -109,7 +109,7 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
           <Text style={styles.actionIcon}>✏️</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionButton, styles.deleteActionButton]}
+          style={[styles.actionButton]}
           onPress={() => handleDelete(item)}
           accessibilityRole="button"
           accessibilityLabel="Xóa"
@@ -130,18 +130,18 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
             <Text style={styles.btnBackText}>Quay lại</Text>
           </TouchableOpacity>
         )}
-        <Text style={styles.title}>QUẢN LÝ LOẠI SẢN PHẨM</Text>
+        <Text style={styles.title}>QUẢN LÝ DANH MỤC</Text>
       </View>
 
       <View style={styles.content}>
         {/* Form thêm/sửa */}
         <View style={styles.formBox}>
           <Text style={styles.formTitle}>
-            {editingId !== null ? 'Cập nhật loại sản phẩm' : 'Thêm loại sản phẩm mới'}
+            {editingId !== null ? 'Cập nhật danh mục' : 'Thêm danh mục mới'}
           </Text>
           <TextInput
             style={styles.input}
-            placeholder="Nhập tên loại sản phẩm"
+            placeholder="Nhập tên danh mục"
             placeholderTextColor="#94a3b8"
             value={name}
             onChangeText={setName}
@@ -162,16 +162,16 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
             )}
             <TouchableOpacity style={styles.btnSave} onPress={handleSave}>
               <Text style={styles.btnSaveText}>
-                {editingId !== null ? 'Cập nhật' : '➕ Thêm loại'}
+                {editingId !== null ? 'Cập nhật' : '✍️Thêm'}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Danh sách loại sản phẩm */}
+        {/* Danh sách danh mục */}
         <View style={styles.listBox}>
           <Text style={styles.listTitle}>
-            Danh sách loại sản phẩm ({categories.length})
+            Danh sách danh mục ({categories.length})
           </Text>
           <FlatList
             data={categories}
@@ -179,7 +179,7 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
             renderItem={renderCategoryItem}
             contentContainerStyle={styles.listContent}
             ListEmptyComponent={
-              <Text style={styles.emptyText}>Chưa có loại sản phẩm nào</Text>
+              <Text style={styles.emptyText}>Chưa có danh mục nào</Text>
             }
           />
         </View>
@@ -335,12 +335,6 @@ const styles = StyleSheet.create({
     fontSize: 19,
     lineHeight: 24,
     includeFontPadding: false,
-  },
-  editActionButton: {
-    backgroundColor: '#0f766e',
-  },
-  deleteActionButton: {
-    backgroundColor: '#dc2626',
   },
   emptyText: {
     textAlign: 'center',

@@ -25,10 +25,10 @@ Dự án này bao gồm hai phân hệ chính: **Phân hệ Người dùng (User
 ### B. Chức năng của Admin (4.0 điểm)
 * [ ] **11. Khởi tạo database:** Hỗ trợ sẵn 1 tài khoản admin có sẵn *(0.25đ)*
 * [ ] **12. Đăng nhập Admin:** Bao gồm hiển thị thông tin user đã đăng nhập, đăng xuất (`Header.tsx`); đăng nhập thành công điều hướng đến trang chủ quản trị *(0.5đ)*
-* [ ] **13. Trang chủ quản trị:** Gồm các nút chức năng: Quản lý user, Quản lý loại sản phẩm, Quản lý sản phẩm *(0.25đ)*
+* [ ] **13. Trang chủ quản trị:** Gồm các nút chức năng: Quản lý user, Quản lý Danh mục, Quản lý sản phẩm *(0.25đ)*
 * [ ] **14. Admin Bottom Tab:** Gồm: Home của user, Home của admin, Signup, Login *(0.5đ)*
 * [ ] **15. Quản trị User:** Xem, cập nhật vai trò, xóa user *(0.5đ)*
-* [ ] **16. Quản trị Loại sản phẩm:** Xem, thêm, sửa, xóa loại sản phẩm, và thêm sản phẩm cho loại tương ứng *(1.0đ)*
+* [ ] **16. Quản trị Danh mục:** Xem, thêm, sửa, xóa Danh mục, và thêm sản phẩm cho loại tương ứng *(1.0đ)*
 * [ ] **17. Quản trị Sản phẩm:** Xem, thêm, sửa, xóa sản phẩm *(1.0đ)*
 
 ### C. Chức năng Khác (2.0 điểm)

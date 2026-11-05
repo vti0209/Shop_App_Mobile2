@@ -137,7 +137,7 @@ export const initProjectDatabase = async (onSuccess?: () => void): Promise<void>
     const db = await getProjectDb();
 
     await db.transaction((tx) => {
-      // 1. BẢNG LOẠI SẢN PHẨM (categories)
+      // 1. BẢNG danh mục (categories)
       tx.executeSql(`
         CREATE TABLE IF NOT EXISTS categories (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -314,6 +314,23 @@ export const addUser = async (user: Omit<User, 'id'>): Promise<boolean> => {
   }
 };
 
+export const updateUser = async (
+  id: number,
+  user: Pick<User, 'username' | 'fullName'> & { password?: string }
+): Promise<boolean> => {
+  try {
+    const db = await getProjectDb();
+    await db.executeSql(
+      'UPDATE users SET username = ?, fullName = ?, password = COALESCE(?, password) WHERE id = ?',
+      [user.username, user.fullName || '', user.password || null, id]
+    );
+    return true;
+  } catch (error) {
+    console.error('❌ Lỗi cập nhật người dùng:', error);
+    return false;
+  }
+};
+
 export const getUserByCredentials = async (
   username: string,
   password: string
@@ -331,17 +348,6 @@ export const getUserByCredentials = async (
   }
 };
 
-export const updateUserRole = async (id: number, newRole: 'admin' | 'user'): Promise<boolean> => {
-  try {
-    const db = await getProjectDb();
-    await db.executeSql('UPDATE users SET role = ? WHERE id = ?', [newRole, id]);
-    return true;
-  } catch (error) {
-    console.error('❌ Lỗi cập nhật vai trò người dùng:', error);
-    return false;
-  }
-};
-
 export const deleteUser = async (id: number): Promise<boolean> => {
   try {
     const db = await getProjectDb();
@@ -353,7 +359,7 @@ export const deleteUser = async (id: number): Promise<boolean> => {
   }
 };
 
-// ====================== THAO TÁC LOẠI SẢN PHẨM (CATEGORIES) ======================
+// ====================== THAO TÁC Danh mục (CATEGORIES) ======================
 export const fetchCategories = async (): Promise<Category[]> => {
   try {
     const db = await getProjectDb();

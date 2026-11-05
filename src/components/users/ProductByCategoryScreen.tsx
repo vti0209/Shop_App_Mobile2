@@ -60,7 +60,7 @@ export default function ProductsByCategoryScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.filterTitle}>Chọn loại sản phẩm:</Text>
+      <Text style={styles.filterTitle}>Chọn danh mục:</Text>
       <View style={styles.selectorWrapper}>
         <CategorySelector
           categories={categories}

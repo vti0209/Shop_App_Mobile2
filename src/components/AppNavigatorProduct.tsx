@@ -66,7 +66,7 @@ export default function AppNavigatorProduct() {
         name="AdminHome"
         component={AdminTabNavigator}
         options={{
-          title: 'Admin Dashboard',
+          title: 'Trang chủ quản trị',
           headerRight: LogoutHeaderButton,
         }}
       />

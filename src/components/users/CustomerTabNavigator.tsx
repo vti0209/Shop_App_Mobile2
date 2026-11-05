@@ -98,9 +98,9 @@ const AccountScreen = ({
         <View style={styles.avatar}>
           <Text style={styles.avatarEmoji}>👤</Text>
         </View>
-        <Text style={styles.accountName}>{username || 'Khách'}</Text>
+        <Text style={styles.accountName}>{username || 'Love'}</Text>
         <Text style={styles.accountCaption}>
-          {username ? 'Tài khoản khách hàng' : 'Bạn đang sử dụng với tư cách khách'}
+          {username ? 'User' : 'Bạn chưa đăng nhập'}
         </Text>
       </View>
       {username ? (

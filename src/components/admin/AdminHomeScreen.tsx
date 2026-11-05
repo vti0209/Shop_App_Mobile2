@@ -1,6 +1,6 @@
 // src/components/admin/AdminHomeScreen.tsx
 // CHỨC NĂNG 13 (PHIẾU CHẤM ĐIỂM): Trang chủ quản trị
-// Gồm các nút chức năng: Quản lý user, Quản lý loại sản phẩm, Quản lý sản phẩm
+// Gồm các nút chức năng: Quản lý user, Quản lý danh mục, Quản lý sản phẩm
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -71,12 +71,12 @@ const AdminHomeScreen: React.FC = () => {
           <Text style={styles.menuButtonTitle}>Quản lý user ({stats.totalUsers})</Text>
         </TouchableOpacity>
 
-        {/* Nút 2: Quản lý loại sản phẩm */}
+        {/* Nút 2: Quản lý danh mục */}
         <TouchableOpacity
           style={[styles.menuButton, styles.btnCategory]}
           onPress={() => navigation.navigate('Categories')}
         >
-          <Text style={styles.menuButtonTitle}>Quản lý loại sản phẩm ({stats.totalCategories})</Text>
+          <Text style={styles.menuButtonTitle}>Quản lý danh mục ({stats.totalCategories})</Text>
         </TouchableOpacity>
 
         {/* Nút 3: Quản lý sản phẩm */}

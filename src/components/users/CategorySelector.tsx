@@ -1,4 +1,4 @@
-// Component danh sách các nút loại sản phẩm
+// Component danh sách các nút Danh mục
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import type { Category } from '../../database/types';

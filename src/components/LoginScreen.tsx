@@ -83,7 +83,7 @@ const LoginScreen = ({ navigation, route }: Props) => {
         {/* Bước 6: Hiển thị biểu mẫu đăng nhập trước khi vào các chức năng chính. */}
         <View style={styles.card}>
           <Text style={styles.title}>Chào mừng trở lại</Text>
-          <Text style={styles.subtitle}>Đăng nhập để tiếp tục mua sắm.</Text>
+          <Text style={styles.subtitle}>Đăng nhập để mua sắm.</Text>
 
           <TextInput
             style={styles.input}

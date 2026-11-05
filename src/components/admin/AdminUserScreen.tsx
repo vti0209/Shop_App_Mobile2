@@ -11,7 +11,7 @@ import {
   SafeAreaView,
   TextInput,
 } from 'react-native';
-import { fetchUsers, updateUserRole, deleteUser, addUser } from '../../database/projectDb';
+import { fetchUsers, updateUser, deleteUser, addUser } from '../../database/projectDb';
 import { User } from '../../database/types';
 
 interface AdminUserScreenProps {
@@ -24,6 +24,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -34,52 +35,51 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
     setUsers(list.filter((user) => user.username !== 'admin'));
   };
 
-  const handleAddUser = async () => {
-    if (!username.trim() || !password.trim()) {
-      Alert.alert('Thông báo', 'Vui lòng nhập tên đăng nhập và mật khẩu!');
+  const clearForm = () => {
+    setUsername('');
+    setPassword('');
+    setFullName('');
+    setEditingId(null);
+  };
+
+  const handleSaveUser = async () => {
+    if (!username.trim() || (editingId === null && !password.trim())) {
+      Alert.alert(
+        'Thông báo',
+        editingId !== null ? 'Vui lòng nhập tên đăng nhập!' : 'Vui lòng nhập tên đăng nhập và mật khẩu!'
+      );
       return;
     }
 
-    const success = await addUser({
-      username: username.trim(),
-      password: password.trim(),
-      fullName: fullName.trim(),
-      role: 'user',
-    });
+    const success = editingId !== null
+      ? await updateUser(editingId, {
+        username: username.trim(),
+        fullName: fullName.trim(),
+        password: password.trim() || undefined,
+      })
+      : await addUser({
+        username: username.trim(),
+        password: password.trim(),
+        fullName: fullName.trim(),
+        role: 'user',
+      });
 
     if (success) {
-      Alert.alert('Thành công', 'Đã thêm người dùng mới!');
-      setUsername('');
-      setPassword('');
-      setFullName('');
+      Alert.alert('Thành công', editingId !== null ? 'Đã cập nhật người dùng!' : 'Đã thêm người dùng mới!');
+      clearForm();
       setShowAddForm(false);
       loadUsers();
     } else {
-      Alert.alert('Lỗi', 'Tên đăng nhập đã tồn tại!');
+      Alert.alert('Lỗi', editingId !== null ? 'Không thể cập nhật người dùng. Tên đăng nhập có thể đã tồn tại.' : 'Tên đăng nhập đã tồn tại!');
     }
   };
 
-  const handleToggleRole = (user: User) => {
-    if (user.username === 'admin') {
-      Alert.alert('Cảnh báo', 'Không thể đổi quyền tài khoản Admin gốc!');
-      return;
-    }
-
-    const newRole = user.role === 'admin' ? 'user' : 'admin';
-    Alert.alert(
-      'Xác nhận',
-      `Đổi quyền của "${user.username}" thành [${newRole.toUpperCase()}]?`,
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Đồng ý',
-          onPress: async () => {
-            await updateUserRole(user.id, newRole);
-            loadUsers();
-          },
-        },
-      ]
-    );
+  const handleEditUser = (user: User) => {
+    setUsername(user.username);
+    setPassword('');
+    setFullName(user.fullName || '');
+    setEditingId(user.id);
+    setShowAddForm(true);
   };
 
   const handleDeleteUser = (user: User) => {
@@ -106,8 +106,6 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
   };
 
   const renderUserItem = ({ item, index }: { item: User; index: number }) => {
-    const isAdmin = item.role === 'admin';
-
     return (
       <View style={styles.userCard}>
         <View style={styles.userInfo}>
@@ -115,7 +113,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
             <Text style={styles.usernameText} numberOfLines={1}>
               {index + 1}. {item.username}
             </Text>
-            <View style={[styles.roleBadge, isAdmin ? styles.roleAdmin : styles.roleUser]}>
+            <View style={[styles.roleBadge, styles.roleUser]}>
               <Text style={styles.roleText}>{item.role.toUpperCase()}</Text>
             </View>
           </View>
@@ -125,11 +123,17 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
         </View>
 
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.btnRole} onPress={() => handleToggleRole(item)}>
-            <Text style={styles.btnActionText}>🔁</Text>
+          <TouchableOpacity
+            style={[styles.actionButton]}
+            onPress={() => handleEditUser(item)}
+            accessibilityRole="button"
+            accessibilityLabel="Sửa"
+            hitSlop={4}
+          >
+            <Text style={styles.actionIcon}>✏️</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionButton, styles.deleteActionButton]}
+            style={[styles.actionButton]}
             onPress={() => handleDeleteUser(item)}
             accessibilityRole="button"
             accessibilityLabel="Xóa"
@@ -157,21 +161,31 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
       <View style={styles.content}>
         <View style={styles.topRow}>
           <Text style={styles.listTitle}>
-            Danh sách người dùng ({users.length})
+            Danh sách ({users.length})
           </Text>
           <TouchableOpacity
             style={styles.btnAddToggle}
-            onPress={() => setShowAddForm(!showAddForm)}
+            onPress={() => {
+              if (showAddForm) {
+                clearForm();
+                setShowAddForm(false);
+              } else {
+                clearForm();
+                setShowAddForm(true);
+              }
+            }}
           >
             <Text style={styles.btnAddToggleText}>
-              {showAddForm ? 'Đóng' : '✍️Thêm'}
+              {showAddForm ? 'Đóng' : '✍️ Thêm '}
             </Text>
           </TouchableOpacity>
         </View>
 
         {showAddForm && (
           <View style={styles.formBox}>
-            <Text style={styles.formTitle}>Thêm người dùng mới</Text>
+            <Text style={styles.formTitle}>
+              {editingId !== null ? 'Cập nhật người dùng' : 'Thêm người dùng mới'}
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="Tên đăng nhập"
@@ -182,7 +196,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
             />
             <TextInput
               style={styles.input}
-              placeholder="Mật khẩu"
+              placeholder={editingId !== null ? 'Mật khẩu mới (để trống nếu không đổi)' : 'Mật khẩu'}
               placeholderTextColor="#94a3b8"
               secureTextEntry
               value={password}
@@ -196,9 +210,24 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
               onChangeText={setFullName}
             />
 
-            <TouchableOpacity style={styles.btnSave} onPress={handleAddUser}>
-              <Text style={styles.btnSaveText}>Lưu người dùng</Text>
-            </TouchableOpacity>
+            <View style={styles.formActions}>
+              {editingId !== null && (
+                <TouchableOpacity
+                  style={styles.btnCancel}
+                  onPress={() => {
+                    clearForm();
+                    setShowAddForm(false);
+                  }}
+                >
+                  <Text style={styles.btnCancelText}>Hủy</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.btnSave} onPress={handleSaveUser}>
+                <Text style={styles.btnSaveText}>
+                  {editingId !== null ? 'Cập nhật' : 'Lưu người dùng'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -308,6 +337,7 @@ const styles = StyleSheet.create({
     color: '#1e293b',
   },
   btnSave: {
+    flex: 1,
     backgroundColor: '#198754',
     paddingVertical: 8,
     borderRadius: 5,
@@ -317,6 +347,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 13,
+  },
+  formActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  btnCancel: {
+    flex: 1,
+    backgroundColor: '#6c757d',
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: 'center',
   },
   userCard: {
     flexDirection: 'row',
@@ -350,20 +391,17 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
   },
-  roleAdmin: {
-    backgroundColor: '#dc3545',
-  },
   roleUser: {
     backgroundColor: '#0d6efd',
   },
   roleText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 5,
     fontWeight: 'bold',
   },
   userFullName: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 10,
+    color: '#7e0000',
     marginTop: 2,
   },
   actionButtons: {
@@ -373,12 +411,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 8,
     maxWidth: '52%',
-  },
-  btnRole: {
-    backgroundColor: '#0dcaf0',
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 4,
   },
   actionButton: {
     minWidth: 40,
@@ -392,13 +424,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     includeFontPadding: false,
   },
-  deleteActionButton: {
-    backgroundColor: '#dc2626',
-  },
-  btnActionText: {
+  btnCancelText: {
     color: '#fff',
-    fontSize: 11,
     fontWeight: 'bold',
+    fontSize: 13,
   },
   emptyText: {
     textAlign: 'center',
