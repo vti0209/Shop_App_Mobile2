@@ -110,14 +110,6 @@ const CustomerHomeScreen = () => {
 
   return (
     <View style={styles.screen}>
-      {/* Bước 4: Chào mừng người dùng và cho phép lọc sản phẩm theo danh mục. */}
-      <View style={styles.banner}>
-        <Text style={styles.bannerTitle} numberOfLines={2}>
-          Xin chào!
-        </Text>
-        <Text style={styles.bannerDescription}>Khám phá sản phẩm bên dưới</Text>
-      </View>
-
       <View style={styles.searchFilterRow}>
         <TextInput
           style={styles.searchInput}
@@ -157,6 +149,14 @@ const CustomerHomeScreen = () => {
             Lọc
           </Text>
         </TouchableOpacity>
+      </View>
+      {/* Bước 4: Chào mừng người dùng và cho phép lọc sản phẩm theo danh mục. */}
+      <View style={styles.banner}>
+        <Image source={require('../../assets/images/banner.png')} style={styles.bannerImage} />
+        <Text style={styles.bannerTitle} numberOfLines={2}>
+          Xin chào!
+        </Text>
+        <Text style={styles.bannerDescription}>Hãy trải nghiệm mua sắm tuyệt vời cùng chúng tôi nhé ❤️</Text>
       </View>
 
       {showCategoryFilter && (
@@ -229,32 +229,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   banner: {
-    padding: 18,
-    marginTop: 14,
-    marginBottom: 18,
-    backgroundColor: '#7c3aed',
+    padding: 10,
+    marginTop: 2,
+    marginBottom: 2,
+    backgroundColor: '#003d7a',
+    borderRadius: 14,
+  },
+  bannerImage: {
+    width: '100%',
+    height: 150,
     borderRadius: 14,
   },
   bannerCaption: {
     color: '#ddd6fe',
-    fontSize: 13,
+    fontSize: 10,
   },
   bannerTitle: {
     color: '#ffffff',
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: '700',
-    marginTop: 4,
+    marginTop: 2,
     flexShrink: 1,
   },
   bannerDescription: {
     color: '#ede9fe',
-    fontSize: 13,
-    marginTop: 4,
+    fontSize: 12,
+    marginTop: 2,
   },
   searchFilterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+    marginTop: 4,
     gap: 8,
   },
   searchInput: {
@@ -268,7 +274,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: 10,
-    fontSize: 14,
+    fontSize: 12,
   },
   searchButton: {
     minWidth: 48,
@@ -281,7 +287,7 @@ const styles = StyleSheet.create({
   },
   searchButtonText: {
     color: '#ffffff',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
   },
   filterButton: {
@@ -301,7 +307,7 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     color: '#475569',
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: '700',
   },
   filterButtonTextActive: {
@@ -325,24 +331,25 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#0f172a',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
   },
   productCount: {
     color: '#64748b',
-    fontSize: 12,
+    fontSize: 10,
+    fontWeight: '600',
   },
   productList: {
-    paddingBottom: 24,
+    paddingBottom: 12,
   },
   productRow: {
-    gap: 8,
+    gap: 4,
   },
   productCard: {
     flex: 1,
     minWidth: 0,
     padding: 7,
-    marginBottom: 9,
+    marginBottom: 5,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#e2e8f0',
@@ -350,10 +357,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   addToCartButton: {
-    minHeight: 32,
+    minHeight: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 2,
     backgroundColor: '#009760',
     borderRadius: 9,
   },
@@ -373,22 +380,22 @@ const styles = StyleSheet.create({
   productName: {
     minHeight: 34,
     color: '#1e293b',
-    fontSize: 11,
+    fontSize: 10,
     lineHeight: 15,
     fontWeight: '700',
   },
   productPrice: {
     color: '#be123c',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
-    marginTop: 5,
+    marginTop: 2,
   },
   pagination: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 8,
-    marginBottom: 8,
+    padding: 4,
+    marginBottom: 4,
     backgroundColor: '#ffffff',
     borderColor: '#e2e8f0',
     borderRadius: 14,
@@ -407,7 +414,7 @@ const styles = StyleSheet.create({
   },
   pageButtonText: {
     color: '#ffffff',
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: '700',
   },
   pageButtonTextDisabled: {
@@ -420,16 +427,16 @@ const styles = StyleSheet.create({
   },
   pageNumber: {
     color: '#6d28d9',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '800',
   },
   pageDivider: {
     color: '#94a3b8',
-    fontSize: 13,
+    fontSize: 10,
   },
   pageTotal: {
     color: '#64748b',
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: '600',
   },
   emptyText: {

@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Image,
 } from 'react-native';
 import { initProjectDatabase, getDashboardStats } from '../../database/projectDb';
 import type { AdminTabParamList } from './AdminTabNavigator';
@@ -39,9 +40,8 @@ const AdminHomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Tiêu đề trang */}
-        <Text style={styles.title}>Admin</Text>
-
+        {/* thêm ảnh banner vào chỗ này */}
+        <Image source={require('../../assets/images/banner.png')} style={styles.banner} />
         {/* Khung tóm tắt thống kê gọn gàng */}
         <View style={styles.statsCard}>
           <Text style={styles.statsTitle}>Tổng quan</Text>
@@ -100,6 +100,12 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  banner: {
+    width: '100%',
+    height: 150,
+    marginBottom: 20,
+    borderRadius: 5,
   },
   title: {
     fontSize: 20,
