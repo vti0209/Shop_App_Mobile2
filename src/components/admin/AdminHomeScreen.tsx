@@ -18,11 +18,7 @@ import AdminProductScreen from './AdminProductScreen';
 
 export type AdminViewType = 'HOME' | 'USERS' | 'CATEGORIES' | 'PRODUCTS';
 
-interface AdminHomeScreenProps {
-  navigation?: any;
-}
-
-const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) => {
+const AdminHomeScreen: React.FC = () => {
   const [activeView, setActiveView] = useState<AdminViewType>('HOME');
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -40,14 +36,6 @@ const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) => {
       loadStats();
     });
   }, [loadStats]);
-
-  const handleNavigate = (view: AdminViewType, screenName?: string) => {
-    if (navigation && typeof navigation.navigate === 'function' && screenName) {
-      navigation.navigate(screenName);
-    } else {
-      setActiveView(view);
-    }
-  };
 
   const handleBack = () => {
     setActiveView('HOME');
@@ -100,7 +88,7 @@ const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) => {
         {/* Nút 1: Quản lý user */}
         <TouchableOpacity
           style={[styles.menuButton, styles.btnUser]}
-          onPress={() => handleNavigate('USERS', 'AdminUserScreen')}
+          onPress={() => setActiveView('USERS')}
         >
           <Text style={styles.menuButtonTitle}>Quản lý user</Text>
           <Text style={styles.menuButtonDesc}>
@@ -111,7 +99,7 @@ const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) => {
         {/* Nút 2: Quản lý loại sản phẩm */}
         <TouchableOpacity
           style={[styles.menuButton, styles.btnCategory]}
-          onPress={() => handleNavigate('CATEGORIES', 'AdminCategoryScreen')}
+          onPress={() => setActiveView('CATEGORIES')}
         >
           <Text style={styles.menuButtonTitle}>Quản lý loại sản phẩm</Text>
           <Text style={styles.menuButtonDesc}>
@@ -122,7 +110,7 @@ const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) => {
         {/* Nút 3: Quản lý sản phẩm */}
         <TouchableOpacity
           style={[styles.menuButton, styles.btnProduct]}
-          onPress={() => handleNavigate('PRODUCTS', 'AdminProductScreen')}
+          onPress={() => setActiveView('PRODUCTS')}
         >
           <Text style={styles.menuButtonTitle}>Quản lý sản phẩm</Text>
           <Text style={styles.menuButtonDesc}>
@@ -180,9 +168,11 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
   statItem: {
+    flex: 1,
+    minWidth: 0,
     alignItems: 'center',
   },
   statNumber: {
@@ -194,6 +184,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 2,
+    textAlign: 'center',
   },
   menuTitle: {
     fontSize: 15,

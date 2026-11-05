@@ -3,12 +3,12 @@ import SQLite, { SQLiteDatabase } from 'react-native-sqlite-storage';
 
 SQLite.enablePromise(true);
 
-let db: SQLiteDatabase | null = null;
+let cachedDatabase: SQLiteDatabase | null = null;
 
 const getDb = async (): Promise<SQLiteDatabase> => {
-  if (db) return db;
-  db = await SQLite.openDatabase({ name: 'myDatabase.db', location: 'default' });
-  return db;
+  if (cachedDatabase) return cachedDatabase;
+  cachedDatabase = await SQLite.openDatabase({ name: 'myDatabase.db', location: 'default' });
+  return cachedDatabase;
 };
 
 export type Category = {
@@ -32,24 +32,45 @@ export type User = {
 };
 
 const initialCategories: Category[] = [
-  { id: 1, name: 'Áo' },
-  { id: 2, name: 'Giày' },
-  { id: 3, name: 'Balo' },
-  { id: 4, name: 'Mũ' },
-  { id: 5, name: 'Túi' },
+  { id: 1, name: 'Chăm sóc da' },
+  { id: 2, name: 'Sữa dinh dưỡng' },
+  { id: 3, name: 'Thực phẩm và gia vị' },
+  { id: 4, name: 'Chăm sóc cá nhân' },
+  { id: 5, name: 'Thực phẩm bổ sung' },
 ];
 const initialProducts: Product[] = [
-    { id: 1, name: 'Áo sơ mi', price: 250000, img: 'sanpham1.png', categoryId: 1 },
-    { id: 2, name: 'Giày sneaker', price: 1100000, img: 'sanpham2.png', categoryId: 2 },
-    { id: 3, name: 'Balo thời trang', price: 490000, img: 'sanpham3.png', categoryId: 3 },
-    { id: 4, name: 'Mũ lưỡi trai', price: 120000, img: 'sanpham4.png', categoryId: 4 },
-    { id: 5, name: 'Túi xách nữ', price: 980000, img: 'sanpham5.png', categoryId: 5 },
-    { id: 6, name: 'Áo thun năng động', price: 180000, img: 'sanpham6.png', categoryId: 1 },
-    { id: 7, name: 'Giày chạy bộ', price: 850000, img: 'sanpham7.png', categoryId: 2 },
-    { id: 8, name: 'Balo laptop', price: 550000, img: 'sanpham8.png', categoryId: 3 },
-    { id: 9, name: 'Mũ len ấm áp', price: 150000, img: 'sanpham9.png', categoryId: 4 },
-    { id: 10, name: 'Túi đeo chéo', price: 420000, img: 'sanpham10.png', categoryId: 5 },
+  { id: 1, name: 'Kem dưỡng da Yuja Niacin', price: 249000, img: 'sanpham1.png', categoryId: 1 },
+  { id: 2, name: 'Sữa bột Enfamil Enspire 350g', price: 690000, img: 'sanpham2.png', categoryId: 2 },
+  { id: 3, name: 'Sữa TH true FORMULA 800g', price: 420000, img: 'sanpham3.png', categoryId: 2 },
+  { id: 4, name: 'Sữa Meiji Infant Formula 800g', price: 650000, img: 'sanpham4.png', categoryId: 2 },
+  { id: 5, name: 'Gia vị Aji-Quick Bún Riêu Cua', price: 9000, img: 'sanpham5.png', categoryId: 3 },
+  { id: 6, name: 'Dầu hào Ajinomoto', price: 28000, img: 'sanpham6.png', categoryId: 3 },
+  { id: 7, name: 'Thực phẩm bổ sung KingsUp', price: 450000, img: 'sanpham7.png', categoryId: 5 },
+  { id: 8, name: 'Xà phòng Lifebuoy Vitamin+ 90g', price: 12000, img: 'sanpham8.png', categoryId: 4 },
+  { id: 9, name: 'Bánh xếp kiểu Nhật Aji Gyoza', price: 89000, img: 'sanpham9.png', categoryId: 3 },
+  { id: 10, name: 'Bộ gia vị Chinsu', price: 95000, img: 'sanpham10.png', categoryId: 3 },
   ];
+
+const legacyCategories: Record<number, string> = {
+  1: 'Áo',
+  2: 'Giày',
+  3: 'Balo',
+  4: 'Mũ',
+  5: 'Túi',
+};
+
+const legacyProducts: Record<number, string> = {
+  1: 'Áo sơ mi',
+  2: 'Giày sneaker',
+  3: 'Balo thời trang',
+  4: 'Mũ lưỡi trai',
+  5: 'Túi xách nữ',
+  6: 'Áo thun năng động',
+  7: 'Giày chạy bộ',
+  8: 'Balo laptop',
+  9: 'Mũ len ấm áp',
+  10: 'Túi đeo chéo',
+};
 
 //async: Khai báo đây là một hàm bất đồng bộ, cho phép sử dụng await bên trong
 // onSuccess?: () => void: Tham số truyền vào là một callback tùy chọn, gọi khi quá trình khởi tạo thành công.
@@ -66,6 +87,10 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
         tx.executeSql('CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY, name TEXT)');
         initialCategories.forEach((category) => {
           tx.executeSql('INSERT OR IGNORE INTO categories (id, name) VALUES (?, ?)', [category.id, category.name]);
+          tx.executeSql(
+            'UPDATE categories SET name = ? WHERE id = ? AND name = ?',
+            [category.name, category.id, legacyCategories[category.id]]
+          );
         });
 
  
@@ -81,6 +106,18 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
         initialProducts.forEach((product) => {
           tx.executeSql('INSERT OR IGNORE INTO products (id, name, price, img, categoryId) VALUES (?, ?, ?, ?, ?)',
             [product.id, product.name, product.price, product.img, product.categoryId]);
+          tx.executeSql(
+            `UPDATE products SET name = ?, price = ?, img = ?, categoryId = ?
+             WHERE id = ? AND name = ?`,
+            [
+              product.name,
+              product.price,
+              product.img,
+              product.categoryId,
+              product.id,
+              legacyProducts[product.id],
+            ]
+          );
         });
 
 
@@ -306,7 +343,7 @@ export const getUserByCredentials = async (username: string, password: string): 
     return null;
   } catch (error) {
     console.error('❌ Error getting user by credentials:', error);
-    return null;
+    throw error;
   }
 };
 

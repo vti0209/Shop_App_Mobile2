@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity, TextInput, A
 import React, { useEffect, useState } from 'react'
 import { launchImageLibrary } from 'react-native-image-picker'
 import RNPickerSelect from 'react-native-picker-select'
+import ActionIconButton from './ActionIconButton'
 
 
 // BƯỚC THÊM 2: Import các hàm thao tác database
@@ -174,12 +175,8 @@ const ProductSqlite = () => {
       </View>
       <Text style={[styles.tableCell, styles.priceCell]}>{item.price.toLocaleString()} đ</Text>
       <View style={[styles.tableCell, styles.actionCell]}>
-        <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
-          <Text style={styles.buttonText}>Sửa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
-          <Text style={styles.buttonText}>Xóa</Text>
-        </TouchableOpacity>
+        <ActionIconButton action="edit" onPress={() => handleEdit(item)} />
+        <ActionIconButton action="delete" onPress={() => handleDelete(item.id)} />
       </View>
     </View>
   );
@@ -208,6 +205,7 @@ return (
             <TextInput
               style={styles.input}
               placeholder="Nhập tên sản phẩm"
+              placeholderTextColor="#94a3b8"
               value={name}
               onChangeText={setName}
             />
@@ -216,6 +214,7 @@ return (
             <TextInput
               style={styles.input}
               placeholder="Nhập giá sản phẩm"
+              placeholderTextColor="#94a3b8"
               value={price}
               onChangeText={setPrice}
               keyboardType="numeric"
@@ -263,7 +262,7 @@ return (
               onPress={handleSave}
             >
               <Text style={styles.buttonText}>
-                {editId !== null ? 'Cập nhật sản phẩm' : '+ Thêm sản phẩm'}
+                {editId !== null ? 'Cập nhật sản phẩm' : '➕ Thêm sản phẩm'}
               </Text>
             </TouchableOpacity>
 
@@ -340,15 +339,16 @@ const styles = StyleSheet.create({
   form: { backgroundColor: '#fff', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' },
   formTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12, color: '#334155' },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 5, color: '#475569' },
-  input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 7, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 12, backgroundColor: '#fff' },
+  input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, backgroundColor: '#f8fafc', color: '#1e293b', fontSize: 14 },
   imageOptions: { marginBottom: 12 },
   imageOption: { borderWidth: 2, borderColor: '#e2e8f0', borderRadius: 8, padding: 3, marginRight: 10 },
   imageSelected: { borderColor: '#2563eb' },
   optionImage: { width: 65, height: 65, borderRadius: 5 },
   imagePreview: { width: 120, height: 120, resizeMode: 'cover', marginTop: 10, marginBottom: 10, borderRadius: 8 },
-  saveButton: { backgroundColor: '#2563eb', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 7, alignItems: 'center', alignSelf: 'flex-end', marginTop: 5 },
-  uploadButton: { backgroundColor: '#009b27', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 7, alignSelf: 'flex-start', marginTop: 5 },
-  cancelButton: { backgroundColor: '#64748b', padding: 10, borderRadius: 7, alignItems: 'center', marginTop: 8 },
+  saveButton: { backgroundColor: '#2563eb', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center', alignSelf: 'flex-end', marginTop: 8 },
+  uploadButton: { backgroundColor: '#009b27', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, alignSelf: 'flex-start', marginTop: 6 },
+  cancelButton: { backgroundColor: '#64748b', padding: 10, borderRadius: 8, alignItems: 'center', marginTop: 8 },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
 
   // BƯỚC THÊM: Vùng danh sách chiếm 50% chiều cao
   listSection: { flex: 1, minHeight: 0, paddingTop: 8 },
@@ -367,13 +367,9 @@ const styles = StyleSheet.create({
   tableImage: { width: 45, height: 45, resizeMode: 'contain' },
   tableName: { fontSize: 11, textAlign: 'center', marginTop: 3 },
   priceCell: { width: 85 },
-  actionHeader: { width: 100, textAlign: 'center' },
-  actionCell: { width: 100, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  actionHeader: { width: 90, textAlign: 'center' },
+  actionCell: { width: 90, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 },
 
-  // BƯỚC THÊM 17: Style cho các nút thao tác
-  editButton: { backgroundColor: '#0d9488', paddingVertical: 6, paddingHorizontal: 8, borderRadius: 5, marginRight: 5 },
-  deleteButton: { backgroundColor: '#dc2626', paddingVertical: 6, paddingHorizontal: 8, borderRadius: 5 },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
   emptyText: { textAlign: 'center', padding: 15 },
-  pickerInput: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 7, paddingHorizontal: 10, paddingVertical: 12, marginBottom: 12, backgroundColor: '#fff', color: '#334155' },
+  pickerInput: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, backgroundColor: '#f8fafc', color: '#1e293b', fontSize: 14 },
 });

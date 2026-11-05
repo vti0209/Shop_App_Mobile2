@@ -26,6 +26,7 @@ import {
 } from './database';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { getProductImageSource } from '../utils/imageHelper';
+import ActionIconButton from './ActionIconButton';
 
 const Sanpham3Sqlite = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -180,18 +181,8 @@ const Sanpham3Sqlite = () => {
         </TouchableOpacity>
 
         <View style={styles.actionColumn}>
-          <TouchableOpacity
-            style={styles.btnEdit}
-            onPress={() => handleEdit(item.id)}
-          >
-            <Text style={styles.btnEditText}>Sửa</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnDelete}
-            onPress={() => handleDelete(item.id)}
-          >
-            <Text style={styles.btnDeleteText}>Xóa</Text>
-          </TouchableOpacity>
+          <ActionIconButton action="edit" onPress={() => handleEdit(item.id)} />
+          <ActionIconButton action="delete" onPress={() => handleDelete(item.id)} />
         </View>
       </View>
     );
@@ -271,7 +262,7 @@ const Sanpham3Sqlite = () => {
             onPress={handleAddOrUpdate}
           >
             <Text style={styles.btnSubmitText}>
-              {editingId ? 'Cập nhật sản phẩm' : '+ Thêm sản phẩm'}
+              {editingId ? 'Cập nhật sản phẩm' : '➕ Thêm sản phẩm'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -484,29 +475,7 @@ const styles = StyleSheet.create({
   },
   actionColumn: {
     justifyContent: 'center',
-    gap: 6,
-  },
-  btnEdit: {
-    backgroundColor: '#0d9488',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-  btnEditText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  btnDelete: {
-    backgroundColor: '#ef4444',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-  btnDeleteText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    gap: 8,
   },
   emptyContainer: {
     paddingVertical: 30,

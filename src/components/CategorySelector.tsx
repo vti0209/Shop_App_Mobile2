@@ -1,6 +1,6 @@
 // Component danh sách các nút loại sản phẩm
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Category } from './database';
 
 interface Props {
@@ -41,10 +41,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     gap: 8,
+    paddingRight: 4,
   },
   button: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    flexShrink: 0,
+    minHeight: 36,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     backgroundColor: '#f1f5f9',
     borderRadius: 20,
     borderWidth: 1,

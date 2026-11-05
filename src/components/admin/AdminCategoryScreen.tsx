@@ -18,6 +18,7 @@ import {
   deleteCategory,
 } from '../../database/projectDb';
 import { Category } from '../../database/types';
+import ActionIconButton from '../ActionIconButton';
 
 interface AdminCategoryScreenProps {
   onBack?: () => void;
@@ -99,12 +100,8 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
         </Text>
       </View>
       <View style={styles.catActions}>
-        <TouchableOpacity style={styles.btnEdit} onPress={() => handleEdit(item)}>
-          <Text style={styles.btnActionText}>Sửa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.btnDelete} onPress={() => handleDelete(item)}>
-          <Text style={styles.btnActionText}>Xóa</Text>
-        </TouchableOpacity>
+        <ActionIconButton action="edit" onPress={() => handleEdit(item)} />
+        <ActionIconButton action="delete" onPress={() => handleDelete(item)} />
       </View>
     </View>
   );
@@ -130,14 +127,14 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
           <TextInput
             style={styles.input}
             placeholder="Nhập tên loại sản phẩm"
-            placeholderTextColor="#888"
+            placeholderTextColor="#94a3b8"
             value={name}
             onChangeText={setName}
           />
           <TextInput
             style={styles.input}
             placeholder="Nhập mô tả (không bắt buộc)"
-            placeholderTextColor="#888"
+            placeholderTextColor="#94a3b8"
             value={description}
             onChangeText={setDescription}
           />
@@ -150,7 +147,7 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
             )}
             <TouchableOpacity style={styles.btnSave} onPress={handleSave}>
               <Text style={styles.btnSaveText}>
-                {editingId !== null ? 'Cập nhật' : 'Thêm loại'}
+                {editingId !== null ? 'Cập nhật' : '➕ Thêm loại'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -165,7 +162,7 @@ const AdminCategoryScreen: React.FC<AdminCategoryScreenProps> = ({ onBack }) => 
             data={categories}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderCategoryItem}
-            contentContainerStyle={{ paddingBottom: 20 }}
+            contentContainerStyle={styles.listContent}
             ListEmptyComponent={
               <Text style={styles.emptyText}>Chưa có loại sản phẩm nào</Text>
             }
@@ -186,6 +183,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
@@ -206,6 +204,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+    flexShrink: 1,
   },
   content: {
     flex: 1,
@@ -227,18 +226,22 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    height: 40,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 0,
+    height: 44,
     marginBottom: 10,
-    fontSize: 13,
-    color: '#000',
+    fontSize: 14,
+    color: '#1e293b',
+    backgroundColor: '#f8fafc',
   },
   btnRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'flex-end',
     gap: 8,
+    marginTop: 2,
   },
   btnCancel: {
     backgroundColor: '#6c757d',
@@ -265,6 +268,9 @@ const styles = StyleSheet.create({
   listBox: {
     flex: 1,
   },
+  listContent: {
+    paddingBottom: 20,
+  },
   listTitle: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -275,6 +281,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minWidth: 0,
     borderWidth: 1,
     borderColor: '#eee',
     borderRadius: 6,
@@ -284,11 +291,13 @@ const styles = StyleSheet.create({
   },
   catInfo: {
     flex: 1,
+    minWidth: 0,
   },
   catName: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#000',
+    flexShrink: 1,
   },
   catDesc: {
     fontSize: 12,
@@ -297,24 +306,8 @@ const styles = StyleSheet.create({
   },
   catActions: {
     flexDirection: 'row',
-    gap: 6,
-  },
-  btnEdit: {
-    backgroundColor: '#0dcaf0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  btnDelete: {
-    backgroundColor: '#dc3545',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  btnActionText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: 'bold',
+    gap: 8,
+    marginLeft: 8,
   },
   emptyText: {
     textAlign: 'center',

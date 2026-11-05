@@ -1,7 +1,7 @@
 // src/database/projectDb.ts
 // CSDL SQLite dành riêng cho Đồ án Cuối kỳ Lập trình Di động 2
 import SQLite, { SQLiteDatabase } from 'react-native-sqlite-storage';
-import { User, Category, Product, Order } from './types';
+import { User, Category, Product } from './types';
 
 SQLite.enablePromise(true);
 
@@ -18,72 +18,114 @@ export const getProjectDb = async (): Promise<SQLiteDatabase> => {
 
 // Dữ liệu mẫu khởi tạo danh mục
 const defaultCategories = [
-  { id: 1, name: 'Áo thời trang', description: 'Áo thun, sơ mi, áo khoác hiện đại' },
-  { id: 2, name: 'Giày sneaker', description: 'Giày thể thao, giày lười, cao cổ' },
-  { id: 3, name: 'Balo du lịch', description: 'Balo đi học, đi làm, chống nước' },
-  { id: 4, name: 'Phụ kiện mũ nón', description: 'Mũ lưỡi trai, bucket thời trang' },
-  { id: 5, name: 'Túi xách cao cấp', description: 'Túi đeo chéo, ví da công sở' },
+  { id: 1, name: 'Chăm sóc da', description: 'Sản phẩm dưỡng da và làm đẹp' },
+  { id: 2, name: 'Sữa dinh dưỡng', description: 'Sữa công thức cho trẻ nhỏ' },
+  { id: 3, name: 'Thực phẩm và gia vị', description: 'Gia vị, nước chấm và thực phẩm' },
+  { id: 4, name: 'Chăm sóc cá nhân', description: 'Sản phẩm vệ sinh và chăm sóc cá nhân' },
+  { id: 5, name: 'Thực phẩm bổ sung', description: 'Sản phẩm bổ sung dinh dưỡng' },
 ];
 
 // Dữ liệu mẫu khởi tạo sản phẩm (Dùng ảnh có sẵn trong thư mục assets/images)
 const defaultProducts = [
   {
     id: 1,
-    name: 'Áo Polo Thể Thao Nam',
-    price: 280000,
+    name: 'Kem dưỡng da Yuja Niacin',
+    price: 249000,
     img: 'sanpham1.png',
     categoryId: 1,
-    description: 'Chất liệu thun gai cá sấu cao cấp, thoáng mát co giãn 4 chiều.',
+    description: 'Kem dưỡng ẩm Yuja Niacin với chiết xuất cam yuzu.',
   },
   {
     id: 2,
-    name: 'Giày Sneaker Phố Trắng',
-    price: 850000,
+    name: 'Sữa bột Enfamil Enspire 350g',
+    price: 690000,
     img: 'sanpham2.png',
     categoryId: 2,
-    description: 'Phong cách năng động trẻ trung, đế cao su êm ái chống trơn trượt.',
+    description: 'Sữa công thức Enfamil Enspire dành cho trẻ nhỏ.',
   },
   {
     id: 3,
-    name: 'Balo Laptop Chống Nước',
-    price: 450000,
+    name: 'Sữa TH true FORMULA 800g',
+    price: 420000,
     img: 'sanpham3.png',
-    categoryId: 3,
-    description: 'Có ngăn đệm chống sốc cho laptop 15.6 inch, cổng sạc USB tiện dụng.',
+    categoryId: 2,
+    description: 'Sữa công thức TH true FORMULA dành cho trẻ từ 0 đến 6 tháng.',
   },
   {
     id: 4,
-    name: 'Mũ Lưỡi Trai Classic',
-    price: 150000,
+    name: 'Sữa Meiji Infant Formula 800g',
+    price: 650000,
     img: 'sanpham4.png',
-    categoryId: 4,
-    description: 'Vải kaki 100% cotton dày dặn, form nón chuẩn phong cách unisex.',
+    categoryId: 2,
+    description: 'Sữa công thức Meiji Premium dành cho trẻ từ 0 đến 1 tuổi.',
   },
   {
     id: 5,
-    name: 'Túi Đeo Chéo Canvas',
-    price: 320000,
+    name: 'Gia vị Aji-Quick Bún Riêu Cua',
+    price: 9000,
     img: 'sanpham5.png',
-    categoryId: 5,
-    description: 'Thiết kế nhiều ngăn đa năng, khóa kéo kim loại bền bỉ.',
+    categoryId: 3,
+    description: 'Gia vị nêm sẵn Aji-Quick vị bún riêu cua.',
   },
   {
     id: 6,
-    name: 'Áo Sơ Mi Oxford Dài Tay',
-    price: 390000,
+    name: 'Dầu hào Ajinomoto',
+    price: 28000,
     img: 'sanpham6.png',
-    categoryId: 1,
-    description: 'Vải cotton oxford ít nhăn, phù hợp công sở và dạo phố.',
+    categoryId: 3,
+    description: 'Dầu hào Ajinomoto dùng nêm nếm và chế biến món ăn.',
   },
   {
     id: 7,
-    name: 'Giày Chạy Bộ Running Pro',
-    price: 1200000,
+    name: 'Thực phẩm bổ sung KingsUp',
+    price: 450000,
     img: 'sanpham7.png',
-    categoryId: 2,
-    description: 'Đế đệm bọt khí êm chân, trợ lực tốt khi vận động thể thao.',
+    categoryId: 5,
+    description: 'Sản phẩm bổ sung dinh dưỡng KingsUp.',
+  },
+  {
+    id: 8,
+    name: 'Xà phòng Lifebuoy Vitamin+ 90g',
+    price: 12000,
+    img: 'sanpham8.png',
+    categoryId: 4,
+    description: 'Xà phòng Lifebuoy Vitamin+ giúp làm sạch và bảo vệ da.',
+  },
+  {
+    id: 9,
+    name: 'Bánh xếp kiểu Nhật Aji Gyoza',
+    price: 89000,
+    img: 'sanpham9.png',
+    categoryId: 3,
+    description: 'Bánh xếp kiểu Nhật nhân thịt heo và gà.',
+  },
+  {
+    id: 10,
+    name: 'Bộ gia vị Chinsu',
+    price: 95000,
+    img: 'sanpham10.png',
+    categoryId: 3,
+    description: 'Bộ sản phẩm gia vị và nước chấm Chinsu.',
   },
 ];
+
+const legacyCategoryNames: Record<number, string> = {
+  1: 'Áo thời trang',
+  2: 'Giày sneaker',
+  3: 'Balo du lịch',
+  4: 'Phụ kiện mũ nón',
+  5: 'Túi xách cao cấp',
+};
+
+const legacyProductNames: Record<number, string> = {
+  1: 'Áo Polo Thể Thao Nam',
+  2: 'Giày Sneaker Phố Trắng',
+  3: 'Balo Laptop Chống Nước',
+  4: 'Mũ Lưỡi Trai Classic',
+  5: 'Túi Đeo Chéo Canvas',
+  6: 'Áo Sơ Mi Oxford Dài Tay',
+  7: 'Giày Chạy Bộ Running Pro',
+};
 
 /**
  * Khởi tạo cơ sở dữ liệu dự án lớn:
@@ -165,14 +207,34 @@ export const initProjectDatabase = async (onSuccess?: () => void): Promise<void>
           'INSERT OR IGNORE INTO categories (id, name, description) VALUES (?, ?, ?)',
           [cat.id, cat.name, cat.description]
         );
+        tx.executeSql(
+          'UPDATE categories SET name = ?, description = ? WHERE id = ? AND name = ?',
+          [cat.name, cat.description, cat.id, legacyCategoryNames[cat.id]]
+        );
       });
 
-      // Chèn sản phẩm mặc định nếu chưa có
+      // Thêm ảnh mẫu còn thiếu và cập nhật các sản phẩm mẫu thời trang cũ.
       defaultProducts.forEach((prod) => {
         tx.executeSql(
           'INSERT OR IGNORE INTO products (id, name, price, img, categoryId, description) VALUES (?, ?, ?, ?, ?, ?)',
           [prod.id, prod.name, prod.price, prod.img, prod.categoryId, prod.description]
         );
+        if (legacyProductNames[prod.id]) {
+          tx.executeSql(
+            `UPDATE products
+             SET name = ?, price = ?, img = ?, categoryId = ?, description = ?
+             WHERE id = ? AND name = ?`,
+            [
+              prod.name,
+              prod.price,
+              prod.img,
+              prod.categoryId,
+              prod.description,
+              prod.id,
+              legacyProductNames[prod.id],
+            ]
+          );
+        }
       });
 
       // Chèn tài khoản Admin mặc định (Chức năng 11: admin / 123456)
@@ -247,6 +309,23 @@ export const addUser = async (user: Omit<User, 'id'>): Promise<boolean> => {
   } catch (error) {
     console.error('❌ Lỗi thêm người dùng:', error);
     return false;
+  }
+};
+
+export const getUserByCredentials = async (
+  username: string,
+  password: string
+): Promise<User | null> => {
+  try {
+    const db = await getProjectDb();
+    const [results] = await db.executeSql(
+      'SELECT * FROM users WHERE username = ? AND password = ?',
+      [username, password]
+    );
+    return results.rows.length > 0 ? results.rows.item(0) : null;
+  } catch (error) {
+    console.error('❌ Lỗi xác thực người dùng:', error);
+    throw error;
   }
 };
 
@@ -342,6 +421,28 @@ export const fetchProducts = async (): Promise<Product[]> => {
     return list;
   } catch (error) {
     console.error('❌ Lỗi tải sản phẩm:', error);
+    return [];
+  }
+};
+
+export const fetchProductsByCategory = async (categoryId: number): Promise<Product[]> => {
+  try {
+    const db = await getProjectDb();
+    const [results] = await db.executeSql(
+      `SELECT products.*, categories.name as categoryName
+       FROM products
+       LEFT JOIN categories ON products.categoryId = categories.id
+       WHERE products.categoryId = ?
+       ORDER BY products.id DESC`,
+      [categoryId]
+    );
+    const list: Product[] = [];
+    for (let i = 0; i < results.rows.length; i++) {
+      list.push(results.rows.item(i));
+    }
+    return list;
+  } catch (error) {
+    console.error('❌ Lỗi tải sản phẩm theo loại:', error);
     return [];
   }
 };

@@ -24,6 +24,7 @@ import {
 } from '../../database/projectDb';
 import { Product, Category } from '../../database/types';
 import { getProductImageSource } from '../../utils/imageHelper';
+import ActionIconButton from '../ActionIconButton';
 
 interface AdminProductScreenProps {
   onBack?: () => void;
@@ -145,23 +146,24 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
   };
 
   const renderProductItem = ({ item, index }: { item: Product; index: number }) => (
-    <View style={styles.tableRow}>
-      <Text style={styles.colIndex}>{index + 1}</Text>
-      <View style={styles.colProduct}>
+    <View style={styles.productCard}>
+      <View style={styles.productImageWrap}>
         <Image source={getProductImageSource(item.img)} style={styles.thumbImage} />
-        <View style={styles.productTextGroup}>
-          <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
-          <Text style={styles.categoryText}>{item.categoryName || 'Chưa phân loại'}</Text>
-        </View>
       </View>
-      <Text style={styles.colPrice}>{item.price.toLocaleString('vi-VN')} đ</Text>
-      <View style={styles.colActions}>
-        <TouchableOpacity style={styles.btnEdit} onPress={() => handleEdit(item)}>
-          <Text style={styles.btnActionText}>Sửa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.btnDelete} onPress={() => handleDelete(item.id)}>
-          <Text style={styles.btnActionText}>Xóa</Text>
-        </TouchableOpacity>
+      <View style={styles.productDetails}>
+        <Text style={styles.productName} numberOfLines={2}>
+          {index + 1}. {item.name}
+        </Text>
+        <Text style={styles.categoryText} numberOfLines={1}>
+          {item.categoryName || 'Chưa phân loại'}
+        </Text>
+        <Text style={styles.productPrice}>
+          {item.price.toLocaleString('vi-VN')} đ
+        </Text>
+      </View>
+      <View style={styles.actionColumn}>
+        <ActionIconButton action="edit" onPress={() => handleEdit(item)} />
+        <ActionIconButton action="delete" onPress={() => handleDelete(item.id)} />
       </View>
     </View>
   );
@@ -188,7 +190,7 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
           <TextInput
             style={styles.input}
             placeholder="Nhập tên sản phẩm"
-            placeholderTextColor="#888"
+            placeholderTextColor="#94a3b8"
             value={name}
             onChangeText={setName}
           />
@@ -196,7 +198,7 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
           <TextInput
             style={styles.input}
             placeholder="Nhập giá sản phẩm"
-            placeholderTextColor="#888"
+            placeholderTextColor="#94a3b8"
             keyboardType="numeric"
             value={price}
             onChangeText={setPrice}
@@ -216,6 +218,7 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
               style={{
                 inputIOS: styles.pickerInput,
                 inputAndroid: styles.pickerInput,
+                placeholder: styles.pickerPlaceholder,
               }}
             />
           </View>
@@ -240,7 +243,7 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
             )}
             <TouchableOpacity style={styles.btnSave} onPress={handleSave}>
               <Text style={styles.btnSaveText}>
-                {editingId !== null ? 'Cập nhật' : 'Thêm sản phẩm'}
+                {editingId !== null ? 'Cập nhật' : '➕ Thêm sản phẩm'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -251,13 +254,6 @@ const AdminProductScreen: React.FC<AdminProductScreenProps> = ({ onBack }) => {
           <Text style={styles.listTitle}>
             Danh sách sản phẩm ({products.length})
           </Text>
-
-          <View style={styles.tableHeader}>
-            <Text style={styles.headIndex}>STT</Text>
-            <Text style={styles.headProduct}>Sản phẩm</Text>
-            <Text style={styles.headPrice}>Giá</Text>
-            <Text style={styles.headActions}>Thao tác</Text>
-          </View>
 
           <FlatList
             data={products}
@@ -304,6 +300,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+    flexShrink: 1,
   },
   scrollContent: {
     flex: 1,
@@ -325,26 +322,32 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    height: 42,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 0,
+    height: 44,
     marginBottom: 10,
-    color: '#000',
+    color: '#1e293b',
     fontSize: 14,
+    backgroundColor: '#f8fafc',
   },
   pickerBox: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    height: 42,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    height: 44,
     justifyContent: 'center',
     marginBottom: 10,
+    backgroundColor: '#f8fafc',
   },
   pickerInput: {
     fontSize: 14,
-    paddingHorizontal: 10,
-    color: '#000',
+    paddingHorizontal: 12,
+    color: '#1e293b',
+  },
+  pickerPlaceholder: {
+    color: '#94a3b8',
   },
   btnPickImg: {
     backgroundColor: '#6f42c1',
@@ -367,8 +370,10 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'flex-end',
-    gap: 10,
+    gap: 8,
+    marginTop: 2,
   },
   btnCancel: {
     backgroundColor: '#6c757d',
@@ -401,33 +406,29 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#333',
   },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#0d6efd',
-    paddingVertical: 8,
-    borderRadius: 4,
-  },
-  headIndex: { width: 35, color: '#fff', fontWeight: 'bold', fontSize: 12, textAlign: 'center' },
-  headProduct: { flex: 1, color: '#fff', fontWeight: 'bold', fontSize: 12, paddingLeft: 6 },
-  headPrice: { width: 85, color: '#fff', fontWeight: 'bold', fontSize: 12, textAlign: 'right', paddingRight: 6 },
-  headActions: { width: 85, color: '#fff', fontWeight: 'bold', fontSize: 12, textAlign: 'center' },
-  tableRow: {
+  productCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingVertical: 8,
+    padding: 9,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
   },
-  colIndex: { width: 35, textAlign: 'center', fontSize: 12, color: '#555' },
-  colProduct: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft: 6 },
-  thumbImage: { width: 38, height: 38, borderRadius: 4, marginRight: 6 },
-  productTextGroup: { flex: 1 },
-  productName: { fontSize: 13, fontWeight: 'bold', color: '#000' },
-  categoryText: { fontSize: 11, color: '#666' },
-  colPrice: { width: 85, fontSize: 12, fontWeight: 'bold', color: '#d63384', textAlign: 'right', paddingRight: 6 },
-  colActions: { width: 85, flexDirection: 'row', justifyContent: 'center', gap: 4 },
-  btnEdit: { backgroundColor: '#198754', paddingHorizontal: 7, paddingVertical: 4, borderRadius: 4 },
-  btnDelete: { backgroundColor: '#dc3545', paddingHorizontal: 7, paddingVertical: 4, borderRadius: 4 },
-  btnActionText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  productImageWrap: {
+    width: 52,
+    height: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+  },
+  thumbImage: { width: 48, height: 52, resizeMode: 'contain' },
+  productDetails: { flex: 1, minWidth: 0, paddingHorizontal: 9 },
+  productName: { fontSize: 13, fontWeight: '700', color: '#0f172a' },
+  categoryText: { fontSize: 11, color: '#64748b', marginTop: 2 },
+  productPrice: { fontSize: 12, fontWeight: '700', color: '#e11d48', marginTop: 3 },
+  actionColumn: { gap: 7, alignItems: 'center' },
   emptyText: { textAlign: 'center', color: '#888', marginTop: 15 },
 });

@@ -3,7 +3,8 @@ import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from './AppNavigatorProduct';
-import { Product, Category, fetchCategories, fetchProductsByCategory } from './database';
+import { fetchCategories, fetchProductsByCategory } from '../database/projectDb';
+import type { Category, Product } from '../database/types';
 import CategorySelector from './CategorySelector';
 import { getProductImageSource } from '../utils/imageHelper';
 
@@ -14,7 +15,7 @@ export default function ProductsByCategoryScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
 
-  const { categoryId, categoryName } = route.params;
+  const { categoryId } = route.params;
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -23,11 +24,6 @@ export default function ProductsByCategoryScreen() {
   useEffect(() => {
     fetchCategories().then((cats) => {
       setCategories(cats);
-      // Đồng bộ tiêu đề ban đầu nếu có
-      const currentCat = cats.find((c) => c.id === selectedCategoryId);
-      if (currentCat) {
-        navigation.setOptions({ title: currentCat.name });
-      }
     });
   }, []);
 
@@ -109,6 +105,7 @@ const styles = StyleSheet.create({
   },
   selectorWrapper: {
     marginBottom: 8,
+    minWidth: 0,
   },
   headerRow: {
     marginTop: 4,
@@ -118,6 +115,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     color: '#0f172a',
+    flexShrink: 1,
   },
   listContent: {
     paddingBottom: 24,
@@ -137,11 +135,12 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 8,
     marginRight: 12,
-    resizeMode: 'cover',
+    resizeMode: 'contain',
     backgroundColor: '#f1f5f9',
   },
   info: {
     flex: 1,
+    minWidth: 0,
     justifyContent: 'center',
   },
   name: {

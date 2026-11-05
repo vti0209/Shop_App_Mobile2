@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { fetchUsers, updateUserRole, deleteUser, addUser } from '../../database/projectDb';
 import { User } from '../../database/types';
+import ActionIconButton from '../ActionIconButton';
 
 interface AdminUserScreenProps {
   onBack?: () => void;
@@ -113,7 +114,9 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
       <View style={styles.userCard}>
         <View style={styles.userInfo}>
           <View style={styles.userRow}>
-            <Text style={styles.usernameText}>{index + 1}. {item.username}</Text>
+            <Text style={styles.usernameText} numberOfLines={1}>
+              {index + 1}. {item.username}
+            </Text>
             <View style={[styles.roleBadge, isAdmin ? styles.roleAdmin : styles.roleUser]}>
               <Text style={styles.roleText}>{item.role.toUpperCase()}</Text>
             </View>
@@ -127,9 +130,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
           <TouchableOpacity style={styles.btnRole} onPress={() => handleToggleRole(item)}>
             <Text style={styles.btnActionText}>Đổi quyền</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.btnDelete} onPress={() => handleDeleteUser(item)}>
-            <Text style={styles.btnActionText}>Xóa</Text>
-          </TouchableOpacity>
+          <ActionIconButton action="delete" onPress={() => handleDeleteUser(item)} />
         </View>
       </View>
     );
@@ -157,7 +158,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
             onPress={() => setShowAddForm(!showAddForm)}
           >
             <Text style={styles.btnAddToggleText}>
-              {showAddForm ? 'Đóng' : '+ Thêm User'}
+              {showAddForm ? 'Đóng' : '➕ Thêm User'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -168,7 +169,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
             <TextInput
               style={styles.input}
               placeholder="Tên đăng nhập"
-              placeholderTextColor="#888"
+              placeholderTextColor="#94a3b8"
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
@@ -176,7 +177,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
             <TextInput
               style={styles.input}
               placeholder="Mật khẩu"
-              placeholderTextColor="#888"
+              placeholderTextColor="#94a3b8"
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -184,7 +185,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
             <TextInput
               style={styles.input}
               placeholder="Họ và tên"
-              placeholderTextColor="#888"
+              placeholderTextColor="#94a3b8"
               value={fullName}
               onChangeText={setFullName}
             />
@@ -219,7 +220,7 @@ const AdminUserScreen: React.FC<AdminUserScreenProps> = ({ onBack }) => {
           data={users}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderUserItem}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <Text style={styles.emptyText}>Chưa có người dùng nào</Text>
           }
@@ -259,18 +260,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+    flexShrink: 1,
   },
   content: {
     flex: 1,
     padding: 12,
   },
+  listContent: {
+    paddingBottom: 20,
+  },
   topRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
     marginBottom: 12,
   },
   listTitle: {
+    flex: 1,
+    minWidth: 0,
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
@@ -302,18 +311,21 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    height: 38,
-    marginBottom: 8,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 0,
+    height: 44,
+    marginBottom: 10,
     backgroundColor: '#fff',
-    fontSize: 13,
-    color: '#000',
+    fontSize: 14,
+    color: '#1e293b',
   },
   roleRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
+    rowGap: 6,
     marginBottom: 10,
   },
   roleLabel: {
@@ -366,13 +378,16 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     flex: 1,
+    minWidth: 0,
   },
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    minWidth: 0,
   },
   usernameText: {
+    flexShrink: 1,
     fontSize: 14,
     fontWeight: 'bold',
     color: '#000',
@@ -400,16 +415,14 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 6,
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
+    maxWidth: '52%',
   },
   btnRole: {
     backgroundColor: '#0dcaf0',
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 4,
-  },
-  btnDelete: {
-    backgroundColor: '#dc3545',
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 4,
