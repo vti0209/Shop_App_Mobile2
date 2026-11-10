@@ -308,7 +308,6 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Thông tin nhận hàng</Text>
-            <Text style={styles.sectionHint}>Tự động điền từ Hồ sơ</Text>
           </View>
 
           {/* Họ và tên */}
@@ -388,17 +387,17 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
             style={[styles.input, !isStreetValid && streetAddress.length > 0 && styles.inputError]}
             value={streetAddress}
             onChangeText={setStreetAddress}
-            placeholder="Ví dụ: Số 123 Đường Cầu Giấy, Tòa nhà A..."
+            placeholder="Vd: Số 123 Đường Cầu Giấy, Tòa nhà A..."
             placeholderTextColor="#94a3b8"
           />
 
           {/* Ghi chú */}
-          <Text style={styles.inputLabel}>Ghi chú giao hàng (Không bắt buộc)</Text>
+          <Text style={styles.inputLabel}>Ghi chú (Không bắt buộc)</Text>
           <TextInput
             style={[styles.input, styles.notesInput]}
             value={notes}
             onChangeText={setNotes}
-            placeholder="Lưu ý giao hàng (Ví dụ: gọi trước 15 phút, giao giờ hành chính...)"
+            placeholder=" Vd: giao giờ hành chính..."
             placeholderTextColor="#94a3b8"
             multiline
             numberOfLines={3}
@@ -484,8 +483,8 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
               <View style={styles.radioDotInner} />
             </View>
             <View style={styles.shippingInfoCol}>
-              <Text style={styles.shippingTitle}>Giao hàng tiêu chuẩn (Standard Shipping)</Text>
-              <Text style={styles.shippingDesc}>Tối ưu chi phí · Giao từ 2–3 ngày làm việc</Text>
+              <Text style={styles.shippingTitle}>Giao hàng tiêu chuẩn</Text>
+              <Text style={styles.shippingDesc}>Chi phí rẻ · Giao từ 2–3 ngày làm việc</Text>
             </View>
             <Text style={styles.shippingBadgeFree}>Miễn phí</Text>
           </View>
@@ -499,7 +498,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
               style={styles.promoField}
               value={promoInput}
               onChangeText={setPromoInput}
-              placeholder="Nhập mã ưu đãi (VANW10, FREESHIP...)"
+              placeholder="Nhập mã..."
               placeholderTextColor="#94a3b8"
               autoCapitalize="characters"
             />
@@ -628,15 +627,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '700',
     color: '#0f172a',
     marginBottom: 10,
-  },
-  sectionHint: {
-    fontSize: 12,
-    color: '#6d28d9',
-    fontWeight: '600',
   },
   emptyCartContainer: {
     alignItems: 'center',
@@ -729,7 +723,7 @@ const styles = StyleSheet.create({
     borderColor: '#cbd5e1',
     borderRadius: 10,
     paddingHorizontal: 14,
-    fontSize: 14,
+    fontSize: 10,
     color: '#0f172a',
     backgroundColor: '#ffffff',
     marginBottom: 10,
@@ -755,7 +749,7 @@ const styles = StyleSheet.create({
   },
   changeActionText: {
     color: '#6d28d9',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
   activePaymentBadge: {
@@ -787,7 +781,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   paymentMethodTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: '#4c1d95',
   },
@@ -842,17 +836,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   shippingTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: '#166534',
   },
   shippingDesc: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#15803d',
     marginTop: 2,
   },
   shippingBadgeFree: {
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: '700',
     color: '#16a34a',
     backgroundColor: '#dcfce7',
@@ -872,7 +866,7 @@ const styles = StyleSheet.create({
     borderColor: '#cbd5e1',
     borderRadius: 8,
     paddingHorizontal: 12,
-    fontSize: 14,
+    fontSize: 10,
     color: '#0f172a',
   },
   applyBtn: {

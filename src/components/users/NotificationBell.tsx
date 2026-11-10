@@ -116,7 +116,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
           <View style={styles.panel}>
             <View style={styles.panelHeader}>
               <View style={styles.titleRow}>
-                <Text style={styles.panelTitle}>Thông báo đơn hàng</Text>
+                <Text style={styles.panelTitle}>Thông báo</Text>
                 <View style={styles.titleBadge}>
                   <Text style={styles.titleBadgeText}>Đơn hàng</Text>
                 </View>
@@ -180,7 +180,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   bellIcon: {
-    fontSize: 22,
+    fontSize: 18,
+    marginRight: 20,
   },
   badge: {
     position: 'absolute',
@@ -205,6 +206,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    marginTop: 4,
+    marginBottom: 18,
   },
   dismissArea: {
     flex: 1,
@@ -237,7 +240,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   panelTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '700',
     color: '#0f172a',
   },

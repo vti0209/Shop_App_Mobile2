@@ -41,7 +41,7 @@ const CartTabIcon = ({ focused }: TabIconProps) => (
 );
 
 const AccountTabIcon = ({ focused }: TabIconProps) => (
-  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>👤</Text>
+  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🐨</Text>
 );
 
 const CategoriesScreen = () => {

@@ -287,7 +287,7 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
         style: 'destructive',
         onPress: () => {
           authLogout();
-          navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+          navigation.reset({ index: 0, routes: [{ name: 'CustomerTabs' }] });
         },
       },
     ]);
@@ -298,7 +298,7 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
       <View style={styles.centerContainer}>
         <Text style={styles.guestTitle}>Chưa đăng nhập</Text>
         <Text style={styles.guestSubtitle}>
-          Đăng nhập để xem và tùy chỉnh thông tin tài khoản & giao hàng.
+          Đăng nhập để xem và tùy chỉnh thông tin & đặt hàng.
         </Text>
         <TouchableOpacity
           style={styles.loginBtn}
@@ -324,13 +324,10 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
         <View style={styles.card}>
           <View style={styles.sectionHeader}>
             <View style={styles.headerIconBadge}>
-              <Text style={styles.headerEmoji}>👤</Text>
+              <Text style={styles.headerEmoji}>😎</Text>
             </View>
             <View style={styles.headerTextCol}>
               <Text style={styles.sectionTitle}>Thông tin tài khoản</Text>
-              <Text style={styles.sectionCaption}>
-                Quản lý tên đăng nhập, ảnh đại diện, email và mật khẩu
-              </Text>
             </View>
           </View>
 
@@ -341,12 +338,12 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
               style={styles.avatarImage}
             />
             <TouchableOpacity style={styles.changeAvatarBtn} onPress={handlePickAvatar}>
-              <Text style={styles.changeAvatarText}>📷 Đổi ảnh đại diện</Text>
+              <Text style={styles.changeAvatarText}>Đổi ảnh đại diện</Text>
             </TouchableOpacity>
           </View>
 
           {/* Username */}
-          <Text style={styles.fieldLabel}>Tên đăng nhập (Username)</Text>
+          <Text style={styles.fieldLabel}>Tên đăng nhập</Text>
           <TextInput
             style={styles.input}
             value={username}
@@ -356,7 +353,7 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
           />
 
           {/* Email */}
-          <Text style={styles.fieldLabel}>Địa chỉ Email</Text>
+          <Text style={styles.fieldLabel}>Email</Text>
           <TextInput
             style={styles.input}
             value={email}
@@ -372,7 +369,7 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
             onPress={() => setShowPasswordSection((prev) => !prev)}
           >
             <Text style={styles.passwordToggleText}>
-              {showPasswordSection ? '▲ Đóng phần đổi mật khẩu' : '🔒 Đổi mật khẩu đăng nhập'}
+              {showPasswordSection ? '▲ Đóng phần đổi mật khẩu' : '🔒 Đổi mật khẩu'}
             </Text>
           </TouchableOpacity>
 
@@ -426,16 +423,13 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
               <Text style={styles.headerEmoji}>🚚</Text>
             </View>
             <View style={styles.headerTextCol}>
-              <Text style={styles.sectionTitle}>Thông tin giao hàng mặc định</Text>
-              <Text style={styles.sectionCaption}>
-                Cấu hình sẵn để tự động điền khi thanh toán (Checkout)
-              </Text>
+              <Text style={styles.sectionTitle}>Thông tin giao hàng *</Text>
             </View>
           </View>
 
           <View style={styles.noticeCallout}>
             <Text style={styles.noticeText}>
-              💡 Thay đổi tại mục này chỉ cập nhật dữ liệu tự động điền (auto-fill) cho giỏ hàng, hoàn toàn không làm thay đổi thông tin tài khoản cá nhân.
+              💡 Mục này sẽ được tự động điền khi bạn nhập thông tin để đặt hàng
             </Text>
           </View>
 
@@ -524,13 +518,13 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
             onPress={() => user && navigation.navigate('OrderHistory', { userId: user.id })}
           >
             <Text style={styles.actionRowIcon}>📋</Text>
-            <Text style={styles.actionRowText}>Xem lịch sử đơn hàng</Text>
+            <Text style={styles.actionRowText}>Xem đơn hàng đã đặt</Text>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.actionRowBtn, styles.logoutBtn]} onPress={handleLogout}>
             <Text style={styles.actionRowIcon}>↪️</Text>
-            <Text style={styles.logoutText}>Đăng xuất khỏi tài khoản</Text>
+            <Text style={styles.logoutText}>Đăng xuất</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -646,7 +640,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   fieldLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#334155',
     marginBottom: 6,
@@ -658,7 +652,7 @@ const styles = StyleSheet.create({
     borderColor: '#cbd5e1',
     borderRadius: 10,
     paddingHorizontal: 14,
-    fontSize: 14,
+    fontSize: 10,
     color: '#0f172a',
     backgroundColor: '#ffffff',
     marginBottom: 6,

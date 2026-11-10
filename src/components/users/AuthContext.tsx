@@ -7,7 +7,7 @@ import React, {
   type ReactNode,
 } from 'react';
 import type { User } from '../../database/types';
-import { getUserById, getUserByUsername } from '../../database/projectDb';
+import { getUserById } from '../../database/projectDb';
 
 interface AuthContextValue {
   currentUser: User | null;
@@ -22,28 +22,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const refreshUser = useCallback(async () => {
-    if (currentUser?.id) {
-      const updated = await getUserById(currentUser.id);
-      if (updated) {
-        setCurrentUser(updated);
-        return;
-      }
+    if (!currentUser?.id) {
+      return;
     }
-    // Fallback: nếu chưa có user nào đăng nhập thì tải tài khoản mẫu khachhang1
-    if (!currentUser) {
-      try {
-        const defaultUser = await getUserByUsername('khachhang1');
-        if (defaultUser) {
-          setCurrentUser(defaultUser);
-        }
-      } catch (err) {
-        console.warn('Chưa khởi tạo user mặc định:', err);
-      }
+
+    const updated = await getUserById(currentUser.id);
+    if (updated) {
+      setCurrentUser(updated);
     }
-  }, [currentUser]);
+  }, [currentUser?.id]);
 
   useEffect(() => {
-    refreshUser();
+    refreshUser().catch((error: unknown) => {
+      console.error('Lỗi làm mới thông tin người dùng:', error);
+    });
   }, [refreshUser]);
 
   const logout = useCallback(() => {

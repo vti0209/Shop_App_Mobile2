@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#334155',
     marginBottom: 6,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   selectorText: {
-    fontSize: 14,
+    fontSize: 10,
     color: '#0f172a',
     flex: 1,
     marginRight: 8,

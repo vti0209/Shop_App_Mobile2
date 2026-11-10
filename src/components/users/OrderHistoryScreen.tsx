@@ -156,7 +156,7 @@ export const OrderHistoryScreen = ({ route }: Props) => {
                 {order.items?.map((item) => (
                   <View key={item.id} style={styles.itemRow}>
                     <Text style={styles.itemName} numberOfLines={1}>
-                      • {item.productName}
+                      {item.productName}
                     </Text>
                     <Text style={styles.itemQtyPrice}>
                       {item.quantity} × {item.price.toLocaleString('vi-VN')} đ
@@ -167,7 +167,7 @@ export const OrderHistoryScreen = ({ route }: Props) => {
 
               {/* Địa chỉ giao hàng & ghi chú */}
               <View style={styles.addressBox}>
-                <Text style={styles.addressLabel}>📍 Người nhận & Địa chỉ:</Text>
+                <Text style={styles.addressLabel}>Địa chỉ:</Text>
                 <Text style={styles.addressText}>
                   {order.customerName} ({order.customerPhone})
                 </Text>
@@ -204,7 +204,7 @@ export const OrderHistoryScreen = ({ route }: Props) => {
                   accessibilityLabel={`Hủy đơn hàng ${order.id}`}
                 >
                   <Text style={styles.cancelButtonText}>
-                    {cancellingOrderId === order.id ? 'Đang xử lý...' : '🗑️ Hủy đơn hàng'}
+                    {cancellingOrderId === order.id ? 'Đang xử lý...' : '🗑️ Hủy'}
                   </Text>
                 </TouchableOpacity>
               ) : isLocked ? (
@@ -385,7 +385,6 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     minHeight: 44,
-    backgroundColor: '#fee2e2',
     borderWidth: 1,
     borderColor: '#fca5a5',
     borderRadius: 10,

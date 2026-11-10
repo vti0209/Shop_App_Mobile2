@@ -4,6 +4,7 @@ import {
   Alert,
   FlatList,
   Image,
+  ScrollView,
   TextInput,
   StyleSheet,
   Text,
@@ -12,25 +13,29 @@ import {
 } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../AppNavigatorProduct';
-import CategorySelector from './CategorySelector';
 import { fetchCategories, fetchProducts, initProjectDatabase } from '../../database/projectDb';
 import type { Category, Product } from '../../database/types';
 import { getProductImageSource } from '../../utils/imageHelper';
 import { useCart } from './CartContext';
 
 type CustomerNavigation = NavigationProp<RootStackParamList>;
-const allProductsCategory: Category = { id: 0, name: 'Tất cả' };
 const PRODUCTS_PER_PAGE = 6;
+const priceRanges = [
+  { label: '0–dưới 200.000đ', min: 0, max: 200_000 },
+  { label: '200.000–dưới 500.000đ', min: 200_000, max: 500_000 },
+  { label: '500.000–1.000.000đ', min: 500_000, max: 1_000_001 },
+  { label: 'Trên 1.000.000đ', min: 1_000_001, max: Number.POSITIVE_INFINITY },
+];
 
 const CustomerHomeScreen = () => {
   const navigation = useNavigation<CustomerNavigation>();
   const { addToCart } = useCart();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(0);
+  const [selectedPriceRangeIndex, setSelectedPriceRangeIndex] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [showCategoryFilter, setShowCategoryFilter] = useState(false);
+  const [showPriceFilter, setShowPriceFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Bước 1: Khởi tạo cùng database với đăng nhập và tải danh mục, sản phẩm.
@@ -48,24 +53,23 @@ const CustomerHomeScreen = () => {
     () => {
       const normalizedKeyword = searchKeyword.trim().toLocaleLowerCase('vi');
       return products.filter((product) => {
-        const matchesCategory =
-          selectedCategoryId === 0 || product.categoryId === selectedCategoryId;
         const categoryName = categories.find(
           (category) => category.id === product.categoryId
         )?.name;
+        const selectedPriceRange =
+          selectedPriceRangeIndex === null ? null : priceRanges[selectedPriceRangeIndex];
+        const matchesPriceRange =
+          selectedPriceRange === null ||
+          (product.price >= selectedPriceRange.min && product.price < selectedPriceRange.max);
         const matchesSearch =
           !normalizedKeyword ||
           `${product.name} ${categoryName ?? ''}`
             .toLocaleLowerCase('vi')
             .includes(normalizedKeyword);
-        return matchesCategory && matchesSearch;
+        return matchesPriceRange && matchesSearch;
       });
     },
-    [categories, products, searchKeyword, selectedCategoryId]
-  );
-  const selectorCategories = useMemo(
-    () => [allProductsCategory, ...categories],
-    [categories]
+    [categories, products, searchKeyword, selectedPriceRangeIndex]
   );
   const totalPages = Math.max(1, Math.ceil(visibleProducts.length / PRODUCTS_PER_PAGE));
   const pageProducts = visibleProducts.slice(
@@ -75,7 +79,7 @@ const CustomerHomeScreen = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategoryId, searchKeyword]);
+  }, [selectedPriceRangeIndex, searchKeyword]);
 
   // Bước 3: Mở trang chi tiết khi người dùng chọn sản phẩm.
   const renderProduct = ({ item }: { item: Product }) => (
@@ -104,10 +108,6 @@ const CustomerHomeScreen = () => {
     </View>
   );
 
-  const selectedCategoryName =
-    selectorCategories.find((category) => category.id === selectedCategoryId)?.name ??
-    'Tất cả';
-
   return (
     <View style={styles.screen}>
       <View style={styles.searchFilterRow}>
@@ -132,17 +132,17 @@ const CustomerHomeScreen = () => {
         <TouchableOpacity
           style={[
             styles.filterButton,
-            showCategoryFilter && styles.filterButtonActive,
+            showPriceFilter && styles.filterButtonActive,
           ]}
-          onPress={() => setShowCategoryFilter((visible) => !visible)}
+          onPress={() => setShowPriceFilter((visible) => !visible)}
           accessibilityRole="button"
-          accessibilityLabel="Lọc theo danh mục"
-          accessibilityState={{ expanded: showCategoryFilter }}
+          accessibilityLabel="Lọc theo khoảng giá"
+          accessibilityState={{ expanded: showPriceFilter }}
         >
           <Text
             style={[
               styles.filterButtonText,
-              showCategoryFilter && styles.filterButtonTextActive,
+              showPriceFilter && styles.filterButtonTextActive,
             ]}
             numberOfLines={1}
           >
@@ -150,7 +150,7 @@ const CustomerHomeScreen = () => {
           </Text>
         </TouchableOpacity>
       </View>
-      {/* Bước 4: Chào mừng người dùng và cho phép lọc sản phẩm theo danh mục. */}
+      {/* Bước 4: Chào mừng người dùng và cho phép lọc sản phẩm theo khoảng giá. */}
       <View style={styles.banner}>
         <Image source={require('../../assets/images/banner.png')} style={styles.bannerImage} />
         <Text style={styles.bannerTitle} numberOfLines={2}>
@@ -159,14 +159,47 @@ const CustomerHomeScreen = () => {
         <Text style={styles.bannerDescription}>Hãy trải nghiệm mua sắm tuyệt vời cùng chúng tôi nhé ❤️</Text>
       </View>
 
-      {showCategoryFilter && (
+      {showPriceFilter && (
         <View style={styles.filterPanel}>
-          <Text style={styles.filterLabel}>Danh mục: {selectedCategoryName}</Text>
-          <CategorySelector
-            categories={selectorCategories}
-            selectedId={selectedCategoryId}
-            onSelect={setSelectedCategoryId}
-          />
+          <View style={styles.filterLabelRow}>
+            <Text style={styles.filterLabel}>
+              Khoảng giá: {selectedPriceRangeIndex === null
+                ? 'Tất cả'
+                : priceRanges[selectedPriceRangeIndex].label}
+            </Text>
+            {selectedPriceRangeIndex !== null && (
+              <TouchableOpacity
+                onPress={() => setSelectedPriceRangeIndex(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Bỏ lọc giá"
+              >
+                <Text style={styles.clearPriceFilter}>Bỏ lọc</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.priceRangeList}
+          >
+            {priceRanges.map((range, index) => {
+              const isSelected = selectedPriceRangeIndex === index;
+              return (
+                <TouchableOpacity
+                  key={range.label}
+                  style={[styles.priceRangeButton, isSelected && styles.priceRangeButtonSelected]}
+                  onPress={() => setSelectedPriceRangeIndex(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Lọc giá ${range.label}`}
+                  accessibilityState={{ selected: isSelected }}
+                >
+                  <Text style={[styles.priceRangeText, isSelected && styles.priceRangeTextSelected]}>
+                    {range.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
       )}
 
@@ -316,11 +349,50 @@ const styles = StyleSheet.create({
   filterPanel: {
     marginBottom: 4,
   },
+  filterLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   filterLabel: {
     color: '#475569',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '600',
+    marginBottom: 4,
+    marginTop: 4,
+  },
+  clearPriceFilter: {
+    color: '#6d28d9',
+    fontSize: 11,
+    fontWeight: '700',
     marginBottom: 2,
+  },
+  priceRangeList: {
+    alignItems: 'center',
+    paddingVertical: 5,
+    gap: 8,
+  },
+  priceRangeButton: {
+    minHeight: 34,
+    justifyContent: 'center',
+    paddingHorizontal: 11,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 18,
+  },
+  priceRangeButtonSelected: {
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
+  },
+  priceRangeText: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  priceRangeTextSelected: {
+    color: '#ffffff',
+    fontWeight: '700',
   },
   productsHeading: {
     flexDirection: 'row',

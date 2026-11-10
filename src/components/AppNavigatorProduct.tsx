@@ -8,7 +8,7 @@ import ProductDetailScreen from './users/ProductDetailScreen';
 import ProductsByCategoryScreen from './users/ProductByCategoryScreen';
 import OrderHistoryScreen from './users/OrderHistoryScreen';
 import { CartProvider } from './users/CartContext';
-import { AuthProvider } from './users/AuthContext';
+import { AuthProvider, useAuth } from './users/AuthContext';
 import LoginScreen from './LoginScreen';
 import RegisterScreen from './RegisterScreen';
 import AdminTabNavigator from './admin/AdminTabNavigator';
@@ -31,10 +31,14 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 // Nút đăng xuất xóa lịch sử màn hình đã đăng nhập để không quay lại bằng nút Back.
 const LogoutHeaderButton = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { logout } = useAuth();
 
   return (
     <Pressable
-      onPress={() => navigation.reset({ index: 0, routes: [{ name: 'CustomerTabs' }] })}
+      onPress={() => {
+        logout();
+        navigation.reset({ index: 0, routes: [{ name: 'CustomerTabs' }] });
+      }}
       style={styles.logoutButton}
       accessibilityRole="button"
       accessibilityLabel="Đăng xuất"
