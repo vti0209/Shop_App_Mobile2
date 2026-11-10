@@ -13,11 +13,13 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getUserByCredentials, initProjectDatabase } from '../database/projectDb';
+import { useAuth } from './users/AuthContext';
 import type { RootStackParamList } from './AppNavigatorProduct';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 const LoginScreen = ({ navigation, route }: Props) => {
+  const { setCurrentUser } = useAuth();
   // Bước 1: Khởi tạo trạng thái biểu mẫu; có thể điền sẵn tên sau khi đăng ký.
   const [username, setUsername] = useState(route.params?.username ?? '');
   const [password, setPassword] = useState('');
@@ -58,6 +60,7 @@ const LoginScreen = ({ navigation, route }: Props) => {
       }
 
       // Bước 5: Điều hướng theo quyền và xóa màn hình đăng nhập khỏi lịch sử.
+      setCurrentUser(user);
       navigation.reset({
         index: 0,
         routes: [

@@ -7,9 +7,21 @@ export interface User {
   password?: string;
   fullName?: string;
   phone?: string;
+  email?: string;
   avatar?: string;
   role: 'admin' | 'user';
   createdAt?: string;
+
+  // Cấu hình giao hàng mặc định (Default Delivery Information)
+  deliveryFullName?: string;
+  deliveryPhone?: string;
+  deliveryProvince?: string;
+  deliveryDistrict?: string;
+  deliveryWard?: string;
+  deliveryStreetAddress?: string;
+
+  // Trường cũ để tương thích ngược
+  deliveryLocation?: string;
 }
 
 export interface Category {
@@ -45,10 +57,23 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   customerAddress: string;
+  notes?: string;
+  paymentMethod?: string;
+  shippingMethod?: string;
+  discountAmount?: number;
   totalAmount: number;
   status: 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
   items?: OrderItem[];
+}
+
+export interface OrderNotification {
+  id: number;
+  userId: number;
+  orderId: number;
+  message: string;
+  isRead: number;
+  createdAt: string;
 }
 
 export interface CartItem {

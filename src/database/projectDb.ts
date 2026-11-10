@@ -1,7 +1,7 @@
 // src/database/projectDb.ts
 // CSDL SQLite dành riêng cho Đồ án Cuối kỳ Lập trình Di động 2
 import SQLite, { SQLiteDatabase } from 'react-native-sqlite-storage';
-import { User, Category, Product, Order, CartItem } from './types';
+import { User, Category, Product, Order, CartItem, OrderNotification } from './types';
 
 SQLite.enablePromise(true);
 
@@ -167,6 +167,8 @@ export const initProjectDatabase = async (onSuccess?: () => void): Promise<void>
           password TEXT NOT NULL,
           fullName TEXT,
           phone TEXT,
+          deliveryLocation TEXT,
+          deliveryStreetAddress TEXT,
           avatar TEXT,
           role TEXT NOT NULL DEFAULT 'user',
           createdAt TEXT DEFAULT CURRENT_TIMESTAMP
@@ -181,10 +183,27 @@ export const initProjectDatabase = async (onSuccess?: () => void): Promise<void>
           customerName TEXT NOT NULL,
           customerPhone TEXT NOT NULL,
           customerAddress TEXT NOT NULL,
+          notes TEXT,
+          paymentMethod TEXT NOT NULL DEFAULT 'COD',
+          shippingMethod TEXT NOT NULL DEFAULT 'Standard Shipping',
+          discountAmount REAL NOT NULL DEFAULT 0,
           totalAmount REAL NOT NULL,
           status TEXT NOT NULL DEFAULT 'PENDING',
           createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (userId) REFERENCES users(id)
+        )
+      `);
+
+      tx.executeSql(`
+        CREATE TABLE IF NOT EXISTS order_notifications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          userId INTEGER NOT NULL,
+          orderId INTEGER NOT NULL,
+          message TEXT NOT NULL,
+          isRead INTEGER NOT NULL DEFAULT 0,
+          createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (userId) REFERENCES users(id),
+          FOREIGN KEY (orderId) REFERENCES orders(id)
         )
       `);
 
@@ -254,11 +273,51 @@ export const initProjectDatabase = async (onSuccess?: () => void): Promise<void>
     });
 
     const [userColumns] = await db.executeSql('PRAGMA table_info(users)');
-    const hasAvatarColumn = Array.from({ length: userColumns.rows.length }, (_, index) =>
+    const existingUserColumns = Array.from({ length: userColumns.rows.length }, (_, index) =>
       userColumns.rows.item(index).name
-    ).includes('avatar');
-    if (!hasAvatarColumn) {
-      await db.executeSql('ALTER TABLE users ADD COLUMN avatar TEXT');
+    );
+    for (const [column, definition] of [
+      ['avatar', 'TEXT'],
+      ['deliveryLocation', 'TEXT'],
+      ['deliveryStreetAddress', 'TEXT'],
+      ['email', 'TEXT'],
+      ['deliveryFullName', 'TEXT'],
+      ['deliveryPhone', 'TEXT'],
+      ['deliveryProvince', 'TEXT'],
+      ['deliveryDistrict', 'TEXT'],
+      ['deliveryWard', 'TEXT'],
+    ]) {
+      if (!existingUserColumns.includes(column)) {
+        await db.executeSql(`ALTER TABLE users ADD COLUMN ${column} ${definition}`);
+      }
+    }
+
+    // Đảm bảo tài khoản mẫu khachhang1 có sẵn thông tin giao hàng mặc định để kiểm tra
+    await db.executeSql(`
+      UPDATE users
+      SET email = COALESCE(NULLIF(email, ''), 'vantiet@example.com'),
+          deliveryFullName = COALESCE(NULLIF(deliveryFullName, ''), fullName, 'Hồ Văn Tiết'),
+          deliveryPhone = COALESCE(NULLIF(deliveryPhone, ''), phone, '0373532152'),
+          deliveryProvince = COALESCE(NULLIF(deliveryProvince, ''), 'Thành phố Hà Nội'),
+          deliveryDistrict = COALESCE(NULLIF(deliveryDistrict, ''), 'Quận Cầu Giấy'),
+          deliveryWard = COALESCE(NULLIF(deliveryWard, ''), 'Phường Dịch Vọng'),
+          deliveryStreetAddress = COALESCE(NULLIF(deliveryStreetAddress, ''), 'Số 123 Đường Cầu Giấy')
+      WHERE username = 'khachhang1'
+    `);
+
+    const [orderColumns] = await db.executeSql('PRAGMA table_info(orders)');
+    const existingOrderColumns = Array.from({ length: orderColumns.rows.length }, (_, index) =>
+      orderColumns.rows.item(index).name
+    );
+    for (const [column, definition] of [
+      ['notes', 'TEXT'],
+      ['paymentMethod', "TEXT NOT NULL DEFAULT 'COD'"],
+      ['shippingMethod', "TEXT NOT NULL DEFAULT 'Standard Shipping'"],
+      ['discountAmount', 'REAL NOT NULL DEFAULT 0'],
+    ]) {
+      if (!existingOrderColumns.includes(column)) {
+        await db.executeSql(`ALTER TABLE orders ADD COLUMN ${column} ${definition}`);
+      }
     }
 
     console.log('✅ [ProjectDb] Khởi tạo CSDL dự án lớn thành công!');
@@ -353,17 +412,145 @@ export const updateUser = async (
 
 export const updateUserProfile = async (
   id: number,
-  user: Pick<User, 'username' | 'fullName' | 'phone' | 'avatar'>
+  user: Pick<User, 'username' | 'fullName' | 'phone' | 'avatar'> &
+    Partial<Pick<User, 'deliveryLocation' | 'deliveryStreetAddress'>>
 ): Promise<boolean> => {
   try {
     const db = await getProjectDb();
     await db.executeSql(
-      'UPDATE users SET username = ?, fullName = ?, phone = ?, avatar = ? WHERE id = ?',
-      [user.username, user.fullName || '', user.phone || '', user.avatar || null, id]
+      `UPDATE users
+       SET username = ?, fullName = ?, phone = ?, avatar = ?,
+           deliveryLocation = ?, deliveryStreetAddress = ?
+       WHERE id = ?`,
+      [
+        user.username,
+        user.fullName || '',
+        user.phone || '',
+        user.avatar || null,
+        user.deliveryLocation || '',
+        user.deliveryStreetAddress || '',
+        id,
+      ]
     );
     return true;
   } catch (error) {
     console.error('❌ Lỗi cập nhật hồ sơ người dùng:', error);
+    return false;
+  }
+};
+
+/**
+ * Cập nhật thông tin tài khoản cá nhân (Account Information)
+ * Chỉ cập nhật Username, Email, Avatar, Password mà không đụng đến thông tin giao hàng
+ */
+export const updateAccountInfo = async (
+  id: number,
+  data: {
+    username?: string;
+    email?: string;
+    avatar?: string;
+    fullName?: string;
+    phone?: string;
+    newPassword?: string;
+  }
+): Promise<boolean> => {
+  try {
+    const db = await getProjectDb();
+    if (data.newPassword && data.newPassword.trim().length > 0) {
+      await db.executeSql(
+        `UPDATE users
+         SET username = COALESCE(?, username),
+             email = COALESCE(?, email),
+             avatar = COALESCE(?, avatar),
+             fullName = COALESCE(?, fullName),
+             phone = COALESCE(?, phone),
+             password = ?
+         WHERE id = ?`,
+        [
+          data.username?.trim() || null,
+          data.email?.trim() || null,
+          data.avatar || null,
+          data.fullName?.trim() || null,
+          data.phone?.trim() || null,
+          data.newPassword.trim(),
+          id,
+        ]
+      );
+    } else {
+      await db.executeSql(
+        `UPDATE users
+         SET username = COALESCE(?, username),
+             email = COALESCE(?, email),
+             avatar = COALESCE(?, avatar),
+             fullName = COALESCE(?, fullName),
+             phone = COALESCE(?, phone)
+         WHERE id = ?`,
+        [
+          data.username?.trim() || null,
+          data.email?.trim() || null,
+          data.avatar || null,
+          data.fullName?.trim() || null,
+          data.phone?.trim() || null,
+          id,
+        ]
+      );
+    }
+    return true;
+  } catch (error) {
+    console.error('❌ Lỗi cập nhật thông tin tài khoản:', error);
+    return false;
+  }
+};
+
+/**
+ * Cập nhật thông tin giao hàng mặc định (Default Delivery Information)
+ * Chỉ cập nhật preset giao hàng dùng cho Checkout, HOÀN TOÀN KHÔNG sửa đổi thông tin tài khoản
+ */
+export const updateDefaultDeliveryInfo = async (
+  id: number,
+  data: {
+    deliveryFullName: string;
+    deliveryPhone: string;
+    deliveryProvince: string;
+    deliveryDistrict: string;
+    deliveryWard: string;
+    deliveryStreetAddress: string;
+  }
+): Promise<boolean> => {
+  try {
+    const db = await getProjectDb();
+    const compositeLocation = [
+      data.deliveryProvince,
+      data.deliveryDistrict,
+      data.deliveryWard,
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    await db.executeSql(
+      `UPDATE users
+       SET deliveryFullName = ?,
+           deliveryPhone = ?,
+           deliveryProvince = ?,
+           deliveryDistrict = ?,
+           deliveryWard = ?,
+           deliveryStreetAddress = ?,
+           deliveryLocation = ?
+       WHERE id = ?`,
+      [
+        data.deliveryFullName.trim(),
+        data.deliveryPhone.trim(),
+        data.deliveryProvince.trim(),
+        data.deliveryDistrict.trim(),
+        data.deliveryWard.trim(),
+        data.deliveryStreetAddress.trim(),
+        compositeLocation,
+        id,
+      ]
+    );
+    return true;
+  } catch (error) {
+    console.error('❌ Lỗi cập nhật thông tin giao hàng mặc định:', error);
     return false;
   }
 };
@@ -555,7 +742,8 @@ export const deleteProduct = async (id: number): Promise<boolean> => {
 
 export const createOrder = async (
   userId: number,
-  details: Pick<Order, 'customerName' | 'customerPhone' | 'customerAddress' | 'totalAmount'>,
+  details: Pick<Order, 'customerName' | 'customerPhone' | 'customerAddress' | 'totalAmount'> &
+    Partial<Pick<Order, 'notes' | 'paymentMethod' | 'shippingMethod' | 'discountAmount'>>,
   items: CartItem[]
 ): Promise<boolean> => {
   try {
@@ -565,13 +753,18 @@ export const createOrder = async (
         (tx) => {
           tx.executeSql(
             `INSERT INTO orders
-              (userId, customerName, customerPhone, customerAddress, totalAmount, status)
-             VALUES (?, ?, ?, ?, ?, 'PENDING')`,
+              (userId, customerName, customerPhone, customerAddress, notes, paymentMethod,
+               shippingMethod, discountAmount, totalAmount, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
             [
               userId,
               details.customerName,
               details.customerPhone,
               details.customerAddress,
+              details.notes || '',
+              details.paymentMethod || 'COD',
+              details.shippingMethod || 'Standard Shipping',
+              details.discountAmount || 0,
               details.totalAmount,
             ],
             (transaction, result) => {
@@ -580,6 +773,11 @@ export const createOrder = async (
                 reject(new Error('Không tạo được mã đơn hàng.'));
                 return;
               }
+              transaction.executeSql(
+                `INSERT INTO order_notifications (userId, orderId, message)
+                 VALUES (?, ?, ?)`,
+                [userId, orderId, `Đơn hàng #${orderId} đã được ghi nhận và đang chờ xác nhận.`]
+              );
 
               items.forEach(({ product, quantity }) => {
                 transaction.executeSql(
@@ -665,10 +863,77 @@ export const updateOrderStatus = async (
 ): Promise<boolean> => {
   try {
     const db = await getProjectDb();
-    await db.executeSql('UPDATE orders SET status = ? WHERE id = ?', [status, orderId]);
+    await new Promise<void>((resolve, reject) => {
+      db.transaction(
+        (tx) => {
+          tx.executeSql(
+            'SELECT userId, status FROM orders WHERE id = ?',
+            [orderId],
+            (transaction, result) => {
+              if (!result.rows.length) {
+                reject(new Error(`Không tìm thấy đơn hàng #${orderId}.`));
+                return;
+              }
+              const order = result.rows.item(0) as { userId: number; status: Order['status'] };
+              if (order.status === status) return;
+              transaction.executeSql(
+                'UPDATE orders SET status = ? WHERE id = ?',
+                [status, orderId]
+              );
+              transaction.executeSql(
+                `INSERT INTO order_notifications (userId, orderId, message)
+                 VALUES (?, ?, ?)`,
+                [order.userId, orderId, orderStatusNotification(orderId, status)]
+              );
+            }
+          );
+        },
+        reject,
+        () => resolve()
+      );
+    });
     return true;
   } catch (error) {
     console.error('❌ Lỗi cập nhật trạng thái đơn hàng:', error);
     return false;
   }
+};
+
+const orderStatusNotification = (orderId: number, status: Order['status']): string => {
+  const messages: Record<Order['status'], string> = {
+    PENDING: 'đang chờ xác nhận',
+    CONFIRMED: 'đã được xác nhận',
+    SHIPPING: 'đang trên đường giao đến bạn',
+    COMPLETED: 'đã giao thành công',
+    CANCELLED: 'đã được hủy',
+  };
+  return `Đơn hàng #${orderId} ${messages[status]}.`;
+};
+
+export const fetchOrderNotifications = async (userId: number): Promise<OrderNotification[]> => {
+  const db = await getProjectDb();
+  const [results] = await db.executeSql(
+    'SELECT * FROM order_notifications WHERE userId = ? ORDER BY createdAt DESC, id DESC',
+    [userId]
+  );
+  return Array.from({ length: results.rows.length }, (_, index) =>
+    results.rows.item(index) as OrderNotification
+  );
+};
+
+export const fetchUnreadNotificationCount = async (userId: number): Promise<number> => {
+  const db = await getProjectDb();
+  const [results] = await db.executeSql(
+    'SELECT COUNT(*) AS count FROM order_notifications WHERE userId = ? AND isRead = 0',
+    [userId]
+  );
+  return results.rows.item(0)?.count || 0;
+};
+
+export const markOrderNotificationsRead = async (userId: number): Promise<void> => {
+  const db = await getProjectDb();
+  await db.executeSql(
+    'UPDATE order_notifications SET isRead = 1 WHERE userId = ? AND isRead = 0',
+    [userId]
+  );
 };

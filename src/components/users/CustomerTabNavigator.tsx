@@ -1,31 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { launchImageLibrary } from 'react-native-image-picker';
 import CustomerHomeScreen from './CustomerHomeScreen';
 import CartScreen from './CartScreen';
+import ProfileSettingsScreen from './ProfileSettingsScreen';
 import { useCart } from './CartContext';
-import {
-  fetchCategories,
-  getUserById,
-  getUserByUsername,
-  initProjectDatabase,
-  updateUserProfile,
-} from '../../database/projectDb';
+import { fetchCategories, initProjectDatabase } from '../../database/projectDb';
 import type { Category } from '../../database/types';
 import type { RootStackParamList } from '../AppNavigatorProduct';
-import { getProductImageSource } from '../../utils/imageHelper';
+import NotificationBell from './NotificationBell';
 
 export type CustomerTabParamList = {
   Shop: { username?: string; userId?: number } | undefined;
@@ -51,7 +41,7 @@ const CartTabIcon = ({ focused }: TabIconProps) => (
 );
 
 const AccountTabIcon = ({ focused }: TabIconProps) => (
-  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>🐨</Text>
+  <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>👤</Text>
 );
 
 const CategoriesScreen = () => {
@@ -66,7 +56,7 @@ const CategoriesScreen = () => {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.subtitle}>Chọn danh mục để khám phá.</Text>
+      <Text style={styles.subtitle}>Chọn danh mục để khám phá các sản phẩm.</Text>
       {categories.map((category, index) => (
         <TouchableOpacity
           key={category.id}
@@ -95,178 +85,6 @@ const CategoriesScreen = () => {
   );
 };
 
-const AccountScreen = ({
-  route,
-}: {
-  route: { params?: { username?: string; userId?: number } };
-}) => {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const username = route.params?.username;
-  const userId = route.params?.userId;
-  const [user, setUser] = useState<Awaited<ReturnType<typeof getUserById>>>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editUsername, setEditUsername] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [avatar, setAvatar] = useState('logo.png');
-
-  useEffect(() => {
-    const loadUser = userId
-      ? getUserById(userId)
-      : username
-        ? getUserByUsername(username)
-        : Promise.resolve(null);
-    loadUser.then((loadedUser) => {
-      setUser(loadedUser);
-      setEditUsername(loadedUser?.username || '');
-      setFullName(loadedUser?.fullName || '');
-      setPhone(loadedUser?.phone || '');
-      setAvatar(loadedUser?.avatar || 'logo.png');
-    }).catch((error: unknown) => {
-      console.error('Không thể tải hồ sơ người dùng:', error);
-      Alert.alert('Lỗi', 'Không thể tải thông tin tài khoản.');
-    });
-  }, [userId, username]);
-
-  const handlePickAvatar = () => {
-    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
-      if (response.didCancel) return;
-      if (response.errorCode) {
-        Alert.alert('Lỗi', response.errorMessage || 'Không thể mở thư viện ảnh.');
-        return;
-      }
-      const uri = response.assets?.[0]?.uri;
-      if (uri) setAvatar(uri);
-    });
-  };
-
-  const handleSaveProfile = async () => {
-    if (!user || !editUsername.trim()) {
-      Alert.alert('Thiếu thông tin', 'Tên đăng nhập không được để trống.');
-      return;
-    }
-
-    const success = await updateUserProfile(user.id, {
-      username: editUsername.trim(),
-      fullName: fullName.trim(),
-      phone: phone.trim(),
-      avatar,
-    });
-    if (!success) {
-      Alert.alert('Lỗi', 'Không thể cập nhật hồ sơ. Tên đăng nhập có thể đã tồn tại.');
-      return;
-    }
-
-    setUser({ ...user, username: editUsername.trim(), fullName: fullName.trim(), phone: phone.trim(), avatar });
-    setIsEditing(false);
-    Alert.alert('Thành công', 'Thông tin tài khoản đã được cập nhật.');
-  };
-
-  const handleLogout = () => {
-    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
-      { text: 'Ở lại', style: 'cancel' },
-      {
-        text: 'Đăng xuất',
-        style: 'destructive',
-        onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Login' }] }),
-      },
-    ]);
-  };
-
-  return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.accountContent}>
-      <View style={styles.accountCard}>
-        <Image
-          source={getProductImageSource(user?.avatar || 'logo1.png')}
-          style={styles.avatar}
-        />
-        {user && isEditing && (
-          <TouchableOpacity style={styles.avatarButton} onPress={handlePickAvatar}>
-            <Text style={styles.avatarButtonText}>Chọn ảnh đại diện</Text>
-          </TouchableOpacity>
-        )}
-        {user && isEditing ? (
-          <View style={styles.profileFields}>
-            <TextInput
-              style={styles.profileInput}
-              value={editUsername}
-              onChangeText={setEditUsername}
-              placeholder="Tên đăng nhập"
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.profileInput}
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder="Họ và tên"
-            />
-            <TextInput
-              style={styles.profileInput}
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="Số điện thoại"
-              keyboardType="phone-pad"
-            />
-          </View>
-        ) : (
-          <>
-            <Text style={styles.accountName}>{user?.fullName || username || '!'}</Text>
-            <Text style={styles.accountCaption}>@{user?.username || username || 'guest'}</Text>
-            {user?.phone ? <Text style={styles.accountCaption}>{user.phone}</Text> : null}
-          </>
-        )}
-      </View>
-      {user ? (
-        <>
-          {isEditing ? (
-            <View style={styles.profileActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setIsEditing(false)}>
-                <Text style={styles.cancelButtonText}>Hủy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveProfileButton} onPress={handleSaveProfile}>
-                <Text style={styles.profileButtonText}>Lưu thông tin</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              <TouchableOpacity
-                style={styles.profileActionButton}
-                onPress={() => setIsEditing(true)}
-                accessibilityRole="button"
-              >
-                <Text style={styles.profileButtonText}>Chỉnh sửa thông tin</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.profileActionButton}
-                onPress={() => navigation.navigate('OrderHistory', { userId: user.id })}
-                accessibilityRole="button"
-              >
-                <Text style={styles.profileButtonText}>Lịch sử mua hàng</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.logoutButton}
-                onPress={handleLogout}
-                accessibilityRole="button"
-              >
-                <Text style={styles.logoutEmoji}>↪</Text>
-                <Text style={styles.logoutText}>Đăng xuất</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </>
-      ) : (
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => navigation.navigate('Login')}
-          accessibilityRole="button"
-        >
-          <Text style={styles.loginButtonText}>Đăng nhập</Text>
-        </TouchableOpacity>
-      )}
-    </ScrollView>
-  );
-};
-
 const CustomerTabNavigator = ({
   route,
 }: {
@@ -287,6 +105,7 @@ const CustomerTabNavigator = ({
       screenOptions={{
         headerStyle: { backgroundColor: '#ffffff' },
         headerTitleStyle: { color: '#0f172a', fontWeight: '700' },
+        headerRight: () => <NotificationBell userId={userId} />,
         tabBarActiveTintColor: '#6d28d9',
         tabBarInactiveTintColor: '#64748b',
         tabBarStyle,
@@ -318,7 +137,7 @@ const CustomerTabNavigator = ({
         component={CartScreen}
         initialParams={{ username, userId }}
         options={{
-          title: 'Giỏ hàng',
+          title: 'Thanh toán & Giỏ hàng',
           tabBarLabel: 'Giỏ hàng',
           tabBarIcon: CartTabIcon,
           tabBarBadge: itemCount > 0 ? itemCount : undefined,
@@ -326,10 +145,10 @@ const CustomerTabNavigator = ({
       />
       <Tab.Screen
         name="Account"
-        component={AccountScreen}
+        component={ProfileSettingsScreen}
         initialParams={{ username, userId }}
         options={{
-          title: 'Tài khoản',
+          title: 'Hồ sơ & Cài đặt',
           tabBarLabel: 'Tài khoản',
           tabBarIcon: AccountTabIcon,
         }}
@@ -343,11 +162,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#f8fafc',
-  },
-  title: {
-    color: '#0f172a',
-    fontSize: 22,
-    fontWeight: '700',
   },
   subtitle: {
     color: '#64748b',
@@ -371,166 +185,42 @@ const styles = StyleSheet.create({
     height: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-    backgroundColor: '#f3e8ff',
+    backgroundColor: '#f1f5f9',
     borderRadius: 12,
+    marginRight: 12,
   },
   categoryEmoji: {
     fontSize: 22,
   },
-  chevron: {
-    color: '#94a3b8',
-    fontSize: 26,
-    lineHeight: 28,
-    paddingHorizontal: 4,
-  },
   categoryName: {
     flex: 1,
-    color: '#1e293b',
     fontSize: 15,
     fontWeight: '600',
+    color: '#1e293b',
   },
-  accountCard: {
-    alignItems: 'center',
-    padding: 24,
-    marginTop: 20,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-  },
-  accountContent: {
-    padding: 16,
-    paddingBottom: 28,
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    resizeMode: 'cover',
-    borderRadius: 32,
-  },
-  avatarButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginTop: 10,
-    backgroundColor: '#ede9fe',
-    borderRadius: 8,
-  },
-  avatarButtonText: {
-    color: '#6d28d9',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  profileFields: {
-    width: '100%',
-    marginTop: 16,
-  },
-  profileInput: {
-    minHeight: 44,
-    paddingHorizontal: 12,
-    marginBottom: 10,
-    color: '#0f172a',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 9,
-  },
-  profileActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
-  },
-  profileActionButton: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    backgroundColor: '#7c3aed',
-    borderRadius: 10,
-  },
-  saveProfileButton: {
-    flex: 1,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#7c3aed',
-    borderRadius: 10,
-  },
-  cancelButton: {
-    flex: 1,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#64748b',
-    borderRadius: 10,
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  profileButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  accountName: {
-    color: '#0f172a',
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 12,
-  },
-  accountCaption: {
-    color: '#64748b',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  logoutButton: {
-    minHeight: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 16,
-    backgroundColor: '#fff1f2',
-    borderRadius: 12,
-  },
-  logoutText: {
-    color: '#dc2626',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  logoutEmoji: {
-    color: '#dc2626',
-    fontSize: 20,
-  },
-  loginButton: {
-    minHeight: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-  },
-  loginButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
+  chevron: {
+    fontSize: 22,
+    color: '#94a3b8',
+    marginLeft: 8,
   },
   tabBar: {
-    height: 65,
-    paddingTop: 6,
-    paddingBottom: 12,
-    borderTopColor: '#e2e8f0',
     backgroundColor: '#ffffff',
+    borderTopColor: '#e2e8f0',
+    borderTopWidth: 1,
+    elevation: 8,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
+    marginTop: 2,
   },
   tabEmoji: {
-    fontSize: 19,
-    opacity: 0.75,
+    fontSize: 20,
+    opacity: 0.65,
   },
   tabEmojiActive: {
     opacity: 1,
+    transform: [{ scale: 1.15 }],
   },
 });
 
