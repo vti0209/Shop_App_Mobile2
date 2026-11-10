@@ -83,9 +83,16 @@ const LoginScreen = ({ navigation, route }: Props) => {
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 20}
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets={true}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Bước 6: Hiển thị biểu mẫu đăng nhập trước khi vào các chức năng chính. */}
         <View style={styles.card}>
           <Text style={styles.title}>Chào mừng trở lại</Text>
@@ -147,7 +154,9 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 16,
+    paddingHorizontal: 18,
+    paddingTop: 24,
+    paddingBottom: 48,
   },
   card: {
     padding: 20,

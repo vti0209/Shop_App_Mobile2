@@ -334,7 +334,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
             style={[styles.input, !isPhoneValid && customerPhone.length > 0 && styles.inputError]}
             value={customerPhone}
             onChangeText={setCustomerPhone}
-            placeholder="Ví dụ: 0912345678"
+            placeholder="09... hoặc +849..."
             placeholderTextColor="#94a3b8"
             keyboardType="phone-pad"
           />
@@ -387,8 +387,10 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
             style={[styles.input, !isStreetValid && streetAddress.length > 0 && styles.inputError]}
             value={streetAddress}
             onChangeText={setStreetAddress}
-            placeholder="Vd: Số 123 Đường Cầu Giấy, Tòa nhà A..."
+            placeholder="Số 9 Tô Hiến Thành, Tòa nhà B..."
             placeholderTextColor="#94a3b8"
+            multiline
+            numberOfLines={3}
           />
 
           {/* Ghi chú */}
@@ -397,10 +399,10 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
             style={[styles.input, styles.notesInput]}
             value={notes}
             onChangeText={setNotes}
-            placeholder=" Vd: giao giờ hành chính..."
+            placeholder="Giao giờ hành chính..."
             placeholderTextColor="#94a3b8"
             multiline
-            numberOfLines={3}
+            numberOfLines={4}
           />
         </View>
 

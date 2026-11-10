@@ -62,8 +62,8 @@ const AdminTabNavigator = () => {
         name="Overview"
         component={AdminHomeScreen}
         options={{
-          title: 'Tổng quan',
-          tabBarLabel: 'Tổng quan',
+          title: 'Trang chủ Admin',
+          tabBarLabel: 'Home',
           tabBarIcon: OverviewTabIcon,
         }}
       />
@@ -72,7 +72,7 @@ const AdminTabNavigator = () => {
         component={AdminUserScreen}
         options={{
           title: 'Người dùng',
-          tabBarLabel: 'User',
+          tabBarLabel: 'Users',
           tabBarIcon: UsersTabIcon,
         }}
       />
@@ -81,7 +81,7 @@ const AdminTabNavigator = () => {
         component={AdminCategoryScreen}
         options={{
           title: 'Danh mục',
-          tabBarLabel: 'Danh mục',
+          tabBarLabel: 'Category',
           tabBarIcon: CategoriesTabIcon,
         }}
       />
@@ -89,8 +89,8 @@ const AdminTabNavigator = () => {
         name="Products"
         component={AdminProductScreen}
         options={{
-          title: 'Sản phẩm',
-          tabBarLabel: 'Sản phẩm',
+          title: 'Sản Phẩm',
+          tabBarLabel: 'Items',
           tabBarIcon: ProductsTabIcon,
         }}
       />
@@ -98,8 +98,8 @@ const AdminTabNavigator = () => {
         name="Orders"
         component={AdminOrdersScreen}
         options={{
-          title: 'Quản lý hàng',
-          tabBarLabel: 'Hàng',
+          title: 'Đơn hàng',
+          tabBarLabel: 'Orders',
           tabBarIcon: OrdersTabIcon,
         }}
       />

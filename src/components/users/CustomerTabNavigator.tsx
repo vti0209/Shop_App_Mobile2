@@ -118,7 +118,7 @@ const CustomerTabNavigator = ({
         initialParams={{ username, userId }}
         options={{
           title: 'Tạp hóa Vanw Tiet',
-          tabBarLabel: 'Sản phẩm',
+          tabBarLabel: 'Home',
           tabBarIcon: ShopTabIcon,
         }}
       />
@@ -128,7 +128,7 @@ const CustomerTabNavigator = ({
         initialParams={{ username, userId }}
         options={{
           title: 'Danh mục',
-          tabBarLabel: 'Danh mục',
+          tabBarLabel: 'Category',
           tabBarIcon: CategoriesTabIcon,
         }}
       />
@@ -138,7 +138,7 @@ const CustomerTabNavigator = ({
         initialParams={{ username, userId }}
         options={{
           title: 'Thanh toán & Giỏ hàng',
-          tabBarLabel: 'Giỏ hàng',
+          tabBarLabel: 'Cart',
           tabBarIcon: CartTabIcon,
           tabBarBadge: itemCount > 0 ? itemCount : undefined,
         }}
@@ -149,7 +149,7 @@ const CustomerTabNavigator = ({
         initialParams={{ username, userId }}
         options={{
           title: 'Hồ sơ & Cài đặt',
-          tabBarLabel: 'Tài khoản',
+          tabBarLabel: username ? 'Me' : 'Account',
           tabBarIcon: AccountTabIcon,
         }}
       />

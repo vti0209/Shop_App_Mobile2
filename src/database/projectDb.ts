@@ -857,6 +857,26 @@ export const fetchAllOrders = async (): Promise<Order[]> => {
   }
 };
 
+/**
+ * Bảng quy tắc chuyển đổi trạng thái đơn hàng một chiều (Strict One-Way Workflow)
+ * 5 trạng thái: PENDING ('CHỜ XÁC NHẬN'), CONFIRMED ('ĐÃ XÁC NHẬN'), SHIPPING ('ĐANG GIAO'), COMPLETED ('ĐÃ GIAO'), CANCELLED ('ĐÃ HỦY')
+ */
+export const VALID_STATUS_TRANSITIONS: Record<Order['status'], Order['status'][]> = {
+  PENDING: ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['SHIPPING', 'CANCELLED'],
+  SHIPPING: ['COMPLETED', 'CANCELLED'],
+  COMPLETED: [], // Đã giao: Trạng thái cuối, đóng băng
+  CANCELLED: [], // Đã hủy: Đóng băng hoàn toàn (Rule 2)
+};
+
+export const canTransitionOrderStatus = (
+  currentStatus: Order['status'],
+  nextStatus: Order['status']
+): boolean => {
+  const allowed = VALID_STATUS_TRANSITIONS[currentStatus];
+  return allowed ? allowed.includes(nextStatus) : false;
+};
+
 export const updateOrderStatus = async (
   orderId: number,
   status: Order['status']
@@ -875,7 +895,37 @@ export const updateOrderStatus = async (
                 return;
               }
               const order = result.rows.item(0) as { userId: number; status: Order['status'] };
-              if (order.status === status) return;
+              if (order.status === status) {
+                resolve();
+                return;
+              }
+
+              // Quy tắc 2: Đơn hàng một khi đã là 'ĐÃ HỦY' thì đóng băng trạng thái, Admin không thể sửa nữa
+              if (order.status === 'CANCELLED') {
+                reject(
+                  new Error(`Đơn hàng #${orderId} đang ở trạng thái 'ĐÃ HỦY' và đã bị đóng băng. Không thể thay đổi trạng thái nữa.`)
+                );
+                return;
+              }
+
+              // Đơn hàng đã ở trạng thái 'ĐÃ GIAO' (Hoàn tất) thì đóng băng
+              if (order.status === 'COMPLETED') {
+                reject(
+                  new Error(`Đơn hàng #${orderId} đang ở trạng thái 'ĐÃ GIAO' (Hoàn tất). Không thể thay đổi trạng thái nữa.`)
+                );
+                return;
+              }
+
+              // Quy tắc 1: Ngăn chặn đi lùi quy trình (One-way State Workflow)
+              if (!canTransitionOrderStatus(order.status, status)) {
+                reject(
+                  new Error(
+                    `Quy trình một chiều: Không thể chuyển trạng thái từ '${order.status}' sang '${status}'. Các trạng thái trước đó đã bị chặn.`
+                  )
+                );
+                return;
+              }
+
               transaction.executeSql(
                 'UPDATE orders SET status = ? WHERE id = ?',
                 [status, orderId]
@@ -885,6 +935,7 @@ export const updateOrderStatus = async (
                  VALUES (?, ?, ?)`,
                 [order.userId, orderId, orderStatusNotification(orderId, status)]
               );
+              resolve();
             }
           );
         },

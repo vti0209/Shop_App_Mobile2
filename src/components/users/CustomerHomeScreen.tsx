@@ -154,7 +154,7 @@ const CustomerHomeScreen = () => {
       <View style={styles.banner}>
         <Image source={require('../../assets/images/banner.png')} style={styles.bannerImage} />
         <Text style={styles.bannerTitle} numberOfLines={2}>
-          Xin chào!
+          Xin chào! 
         </Text>
         <Text style={styles.bannerDescription}>Hãy trải nghiệm mua sắm tuyệt vời cùng chúng tôi nhé ❤️</Text>
       </View>

@@ -24,7 +24,7 @@ const statusDisplay: Record<
   PENDING: { label: 'Chờ xác nhận', color: '#b45309', bgColor: '#fef3c7' },
   CONFIRMED: { label: 'Đã xác nhận', color: '#1d4ed8', bgColor: '#dbeafe' },
   SHIPPING: { label: 'Đang giao hàng', color: '#6d28d9', bgColor: '#ede9fe' },
-  COMPLETED: { label: 'Hoàn tất', color: '#047857', bgColor: '#d1fae5' },
+  COMPLETED: { label: 'Đã giao', color: '#047857', bgColor: '#d1fae5' },
   CANCELLED: { label: 'Đã hủy', color: '#b91c1c', bgColor: '#fee2e2' },
 };
 
