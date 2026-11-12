@@ -3,7 +3,9 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -52,6 +54,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState('');
   const [promoMessage, setPromoMessage] = useState('');
+  const [isOrderReviewVisible, setIsOrderReviewVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // DATA PREFILL LOGIC: Lấy từ Default Delivery Information trong Profile
@@ -183,8 +186,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
     }
   };
 
-  // ĐẶT HÀNG (SUBMISSION)
-  const handlePlaceOrder = async () => {
+  const handleOpenOrderReview = () => {
     if (!effectiveUserId) {
       Alert.alert('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để tiến hành đặt hàng.', [
         { text: 'Để sau', style: 'cancel' },
@@ -194,6 +196,26 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
     }
 
     if (!isFormValid || items.length === 0) {
+      Alert.alert('Chưa hoàn tất', 'Vui lòng điền đầy đủ và chính xác các thông tin có dấu * đỏ.');
+      return;
+    }
+
+    setIsOrderReviewVisible(true);
+  };
+
+  // XÁC NHẬN ĐẶT HÀNG
+  const handlePlaceOrder = async () => {
+    if (!effectiveUserId) {
+      setIsOrderReviewVisible(false);
+      Alert.alert('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để tiến hành đặt hàng.', [
+        { text: 'Để sau', style: 'cancel' },
+        { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') },
+      ]);
+      return;
+    }
+
+    if (!isFormValid || items.length === 0) {
+      setIsOrderReviewVisible(false);
       Alert.alert('Chưa hoàn tất', 'Vui lòng điền đầy đủ và chính xác các thông tin có dấu * đỏ.');
       return;
     }
@@ -223,6 +245,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
       }
 
       clearCart();
+      setIsOrderReviewVisible(false);
       Alert.alert(
         '🎉 Đặt hàng thành công!',
         `Đơn hàng của bạn trị giá ${total.toLocaleString('vi-VN')} đ đã được tiếp nhận. Bạn có thể theo dõi tiến độ trong Lịch sử mua hàng.`,
@@ -334,7 +357,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
             style={[styles.input, !isPhoneValid && customerPhone.length > 0 && styles.inputError]}
             value={customerPhone}
             onChangeText={setCustomerPhone}
-            placeholder="09... hoặc +849..."
+            placeholder="09.../03.../07... (10 chữ số)"
             placeholderTextColor="#94a3b8"
             keyboardType="phone-pad"
           />
@@ -578,7 +601,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
       <View style={styles.stickyFooter}>
         {!isFormValid && items.length > 0 && (
           <Text style={styles.stickyValidationNotice}>
-            ⚠️ Vui lòng điền đầy đủ Họ tên, SĐT và chọn đủ Tỉnh, Huyện, Xã.
+            ⚠️ Vui lòng điền đầy đủ thông tin *
           </Text>
         )}
         <TouchableOpacity
@@ -586,21 +609,135 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
             styles.placeOrderButton,
             (!isFormValid || items.length === 0 || isSubmitting) && styles.disabledPlaceOrder,
           ]}
-          onPress={handlePlaceOrder}
+          onPress={handleOpenOrderReview}
           disabled={!isFormValid || items.length === 0 || isSubmitting}
           accessibilityRole="button"
-          accessibilityLabel={`Đặt hàng tổng tiền ${total.toLocaleString('vi-VN')} đồng`}
+          accessibilityLabel={`Xem lại thông tin đơn hàng, tổng tiền ${total.toLocaleString('vi-VN')} đồng`}
         >
           <Text style={styles.placeOrderText}>
             {isSubmitting
               ? 'Đang xử lý đặt hàng...'
-              : `Đặt hàng · ${total.toLocaleString('vi-VN')} đ`}
+              : `Xem lại thông tin · ${total.toLocaleString('vi-VN')} đ`}
           </Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={isOrderReviewVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => {
+          if (!isSubmitting) setIsOrderReviewVisible(false);
+        }}
+      >
+        <SafeAreaView style={styles.reviewModalOverlay}>
+          <View style={styles.reviewModal}>
+            <View style={styles.reviewModalHeader}>
+              <View>
+                <Text style={styles.reviewModalTitle}>Xem lại đơn hàng</Text>
+                <Text style={styles.reviewModalSubtitle}>
+                  Kiểm tra thông tin trước khi đặt hàng
+                </Text>
+              </View>
+            </View>
+
+            <ScrollView
+              style={styles.reviewScroll}
+              contentContainerStyle={styles.reviewContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={styles.reviewSectionTitle}>Sản phẩm ({items.length})</Text>
+              <View style={styles.reviewSection}>
+                {items.map(({ product, quantity }) => (
+                  <View key={product.id} style={styles.reviewProductRow}>
+                    <View style={styles.reviewProductInfo}>
+                      <Text style={styles.reviewProductName}>{product.name}</Text>
+                      <Text style={styles.reviewMutedText}>
+                        {quantity} × {product.price.toLocaleString('vi-VN')} đ
+                      </Text>
+                    </View>
+                    <Text style={styles.reviewProductTotal}>
+                      {(product.price * quantity).toLocaleString('vi-VN')} đ
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              <Text style={styles.reviewSectionTitle}>Thông tin nhận hàng</Text>
+              <View style={styles.reviewSection}>
+                <ReviewRow label="Người nhận" value={customerName.trim()} />
+                <ReviewRow label="Số điện thoại" value={customerPhone.trim()} />
+                <ReviewRow
+                  label="Địa chỉ"
+                  value={`${streetAddress.trim()}, ${selectedWard}, ${selectedDistrict}, ${selectedProvince}`}
+                />
+                <ReviewRow label="Ghi chú" value={notes.trim() || 'Không có'} />
+              </View>
+
+              <Text style={styles.reviewSectionTitle}>Thanh toán</Text>
+              <View style={styles.reviewSection}>
+                <ReviewRow
+                  label="Phương thức"
+                  value={
+                    paymentMethod === 'COD'
+                      ? 'Thanh toán khi nhận hàng (COD)'
+                      : paymentMethod
+                  }
+                />
+                <ReviewRow label="Vận chuyển" value="Giao hàng tiêu chuẩn · Miễn phí" />
+                <ReviewRow
+                  label="Tạm tính"
+                  value={`${subtotal.toLocaleString('vi-VN')} đ`}
+                />
+                <ReviewRow
+                  label="Giảm giá"
+                  value={`-${discount.toLocaleString('vi-VN')} đ`}
+                />
+                <View style={styles.reviewTotalRow}>
+                  <Text style={styles.reviewTotalLabel}>Tổng thanh toán</Text>
+                  <Text style={styles.reviewTotalValue}>
+                    {total.toLocaleString('vi-VN')} đ
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.reviewActions}>
+              <TouchableOpacity
+                style={styles.reviewCancelButton}
+                onPress={() => setIsOrderReviewVisible(false)}
+                disabled={isSubmitting}
+                accessibilityRole="button"
+              >
+                <Text style={styles.reviewCancelText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.reviewSubmitButton,
+                  isSubmitting && styles.reviewSubmitDisabled,
+                ]}
+                onPress={handlePlaceOrder}
+                disabled={isSubmitting}
+                accessibilityRole="button"
+              >
+                <Text style={styles.reviewSubmitText}>
+                  {isSubmitting ? 'Đang đặt hàng...' : 'Đặt hàng'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
+
+const ReviewRow = ({ label, value }: { label: string; value: string }) => (
+  <View style={styles.reviewInfoRow}>
+    <Text style={styles.reviewMutedText}>{label}</Text>
+    <Text style={styles.reviewInfoValue}>{value}</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   screen: {
@@ -1003,6 +1140,156 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  reviewModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+  },
+  reviewModal: {
+    maxHeight: '90%',
+    backgroundColor: '#f8fafc',
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  reviewModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  reviewModalTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  reviewModalSubtitle: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 3,
+  },
+  reviewScroll: {
+    flexShrink: 1,
+  },
+  reviewContent: {
+    padding: 16,
+    paddingBottom: 8,
+  },
+  reviewSectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#334155',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  reviewSection: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  reviewProductRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e2e8f0',
+  },
+  reviewProductInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  reviewProductName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  reviewMutedText: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  reviewProductTotal: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  reviewInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 9,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e2e8f0',
+  },
+  reviewInfoValue: {
+    flex: 1.5,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1e293b',
+    textAlign: 'right',
+    marginLeft: 12,
+  },
+  reviewTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  reviewTotalLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  reviewTotalValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#be123c',
+  },
+  reviewActions: {
+    flexDirection: 'row',
+    padding: 14,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  reviewCancelButton: {
+    flex: 1,
+    minHeight: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 10,
+    marginRight: 10,
+  },
+  reviewCancelText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  reviewSubmitButton: {
+    flex: 1.4,
+    minHeight: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6d28d9',
+    borderRadius: 10,
+  },
+  reviewSubmitDisabled: {
+    opacity: 0.6,
+  },
+  reviewSubmitText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 });
 

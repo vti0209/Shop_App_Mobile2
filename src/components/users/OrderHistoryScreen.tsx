@@ -1,7 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import {
   Alert,
+  Modal,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -35,6 +37,7 @@ export const OrderHistoryScreen = ({ route }: Props) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [cancellingOrderId, setCancellingOrderId] = useState<number | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const loadOrders = useCallback(async () => {
     if (!effectiveUserId) return;
@@ -190,6 +193,15 @@ export const OrderHistoryScreen = ({ route }: Props) => {
                 </View>
               </View>
 
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() => setSelectedOrder(order)}
+                accessibilityRole="button"
+                accessibilityLabel={`Xem chi tiết đơn hàng ${order.id}`}
+              >
+                <Text style={styles.detailsButtonText}>Xem chi tiết</Text>
+              </TouchableOpacity>
+
               {/* 4. ORDER CANCELLATION LOGIC */}
               {isPending ? (
                 // Nếu là "Pending": Hiển thị nút "Hủy đơn hàng" nổi bật
@@ -211,7 +223,7 @@ export const OrderHistoryScreen = ({ route }: Props) => {
                 // Nếu là "Confirmed", "Shipping" hoặc "Completed": Khóa/ẩn nút hủy, hiển thị thông báo chặn hủy
                 <View style={styles.lockedNotice}>
                   <Text style={styles.lockedNoticeText}>
-                    🔒 Đơn hàng đã được xác nhận / đang xử lý giao hàng. Không thể hủy đơn.
+                    🔒 Đơn hàng đã được xác nhận/xử lý . Không thể hủy đơn.
                   </Text>
                 </View>
               ) : (
@@ -226,9 +238,157 @@ export const OrderHistoryScreen = ({ route }: Props) => {
           );
         })
       )}
+
+      <Modal
+        visible={selectedOrder !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setSelectedOrder(null)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={styles.detailsModal}>
+            {selectedOrder ? (
+              <>
+                <View style={styles.modalHeader}>
+                  <View>
+                    <Text style={styles.modalTitle}>Chi tiết đơn hàng</Text>
+                    <Text style={styles.modalSubtitle}>Mã đơn hàng #{selectedOrder.id}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.modalCloseButton}
+                    onPress={() => setSelectedOrder(null)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Đóng chi tiết đơn hàng"
+                  >
+                    <Text style={styles.modalCloseText}>Đóng</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                  contentContainerStyle={styles.detailsContent}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {(() => {
+                    const selectedStatus = statusDisplay[selectedOrder.status] || {
+                      label: selectedOrder.status,
+                      color: '#475569',
+                      bgColor: '#f1f5f9',
+                    };
+                    const subtotal =
+                      selectedOrder.items?.reduce(
+                        (sum, item) => sum + item.price * item.quantity,
+                        0
+                      ) ?? 0;
+                    const discount = selectedOrder.discountAmount ?? 0;
+
+                    return (
+                      <>
+                        <View style={styles.detailsStatusRow}>
+                          <Text style={styles.detailsLabel}>Trạng thái</Text>
+                          <View
+                            style={[
+                              styles.statusPill,
+                              { backgroundColor: selectedStatus.bgColor },
+                            ]}
+                          >
+                            <Text
+                              style={[styles.statusPillText, { color: selectedStatus.color }]}
+                            >
+                              {selectedStatus.label}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <Text style={styles.detailsSectionTitle}>Thông tin nhận hàng</Text>
+                        <View style={styles.detailsSection}>
+                          <DetailRow label="Người nhận" value={selectedOrder.customerName} />
+                          <DetailRow label="Số điện thoại" value={selectedOrder.customerPhone} />
+                          <DetailRow
+                            label="Địa chỉ"
+                            value={selectedOrder.customerAddress}
+                          />
+                          <DetailRow
+                            label="Tài khoản"
+                            value={selectedOrder.customerUsername || `ID ${selectedOrder.userId}`}
+                          />
+                          <DetailRow
+                            label="Ngày đặt"
+                            value={new Date(selectedOrder.createdAt).toLocaleString('vi-VN')}
+                          />
+                          <DetailRow
+                            label="Vận chuyển"
+                            value={selectedOrder.shippingMethod || 'Standard Shipping'}
+                          />
+                          <DetailRow
+                            label="Thanh toán"
+                            value={selectedOrder.paymentMethod || 'COD'}
+                          />
+                          <DetailRow
+                            label="Ghi chú"
+                            value={selectedOrder.notes?.trim() || 'Không có ghi chú'}
+                          />
+                        </View>
+
+                        <Text style={styles.detailsSectionTitle}>
+                          Sản phẩm ({selectedOrder.items?.length ?? 0})
+                        </Text>
+                        <View style={styles.detailsSection}>
+                          {selectedOrder.items?.length ? (
+                            selectedOrder.items.map((item) => (
+                              <View key={item.id} style={styles.detailsItem}>
+                                <Text style={styles.detailsItemName}>{item.productName}</Text>
+                                <Text style={styles.detailsItemMeta}>
+                                  Mã SP: {item.productId} · {item.quantity} ×{' '}
+                                  {item.price.toLocaleString('vi-VN')} đ
+                                </Text>
+                                <Text style={styles.detailsItemTotal}>
+                                  {(item.price * item.quantity).toLocaleString('vi-VN')} đ
+                                </Text>
+                              </View>
+                            ))
+                          ) : (
+                            <Text style={styles.detailsEmptyText}>
+                              Không có thông tin sản phẩm.
+                            </Text>
+                          )}
+                        </View>
+
+                        <Text style={styles.detailsSectionTitle}>Thanh toán</Text>
+                        <View style={styles.detailsSection}>
+                          <DetailRow
+                            label="Tạm tính"
+                            value={`${subtotal.toLocaleString('vi-VN')} đ`}
+                          />
+                          <DetailRow
+                            label="Giảm giá"
+                            value={`-${discount.toLocaleString('vi-VN')} đ`}
+                          />
+                          <View style={styles.detailsTotalRow}>
+                            <Text style={styles.detailsTotalLabel}>Tổng thanh toán</Text>
+                            <Text style={styles.detailsTotalValue}>
+                              {selectedOrder.totalAmount.toLocaleString('vi-VN')} đ
+                            </Text>
+                          </View>
+                        </View>
+                      </>
+                    );
+                  })()}
+                </ScrollView>
+              </>
+            ) : null}
+          </View>
+        </SafeAreaView>
+      </Modal>
     </ScrollView>
   );
 };
+
+const DetailRow = ({ label, value }: { label: string; value: string }) => (
+  <View style={styles.detailsRow}>
+    <Text style={styles.detailsLabel}>{label}</Text>
+    <Text style={styles.detailsValue}>{value}</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   screen: {
@@ -380,6 +540,151 @@ const styles = StyleSheet.create({
   },
   totalAmount: {
     fontSize: 16,
+    fontWeight: '800',
+    color: '#be123c',
+  },
+  detailsButton: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: '#c4b5fd',
+    backgroundColor: '#f5f3ff',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  detailsButtonText: {
+    color: '#6d28d9',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+  },
+  detailsModal: {
+    maxHeight: '90%',
+    backgroundColor: '#f8fafc',
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  modalCloseButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  modalCloseText: {
+    fontSize: 14,
+    color: '#6d28d9',
+    fontWeight: '700',
+  },
+  detailsContent: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  detailsStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  detailsSectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#334155',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  detailsSection: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 9,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e2e8f0',
+  },
+  detailsLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: '#64748b',
+    marginRight: 12,
+  },
+  detailsValue: {
+    flex: 1.5,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1e293b',
+    textAlign: 'right',
+  },
+  detailsItem: {
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e2e8f0',
+  },
+  detailsItemName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  detailsItemMeta: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 4,
+  },
+  detailsItemTotal: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+    textAlign: 'right',
+    marginTop: 4,
+  },
+  detailsEmptyText: {
+    fontSize: 12,
+    color: '#64748b',
+    paddingVertical: 10,
+  },
+  detailsTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  detailsTotalLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  detailsTotalValue: {
+    fontSize: 15,
     fontWeight: '800',
     color: '#be123c',
   },

@@ -805,7 +805,11 @@ export const fetchOrdersByUser = async (userId: number): Promise<Order[]> => {
   try {
     const db = await getProjectDb();
     const [results] = await db.executeSql(
-      'SELECT * FROM orders WHERE userId = ? ORDER BY createdAt DESC',
+      `SELECT orders.*, users.username AS customerUsername
+       FROM orders
+       LEFT JOIN users ON users.id = orders.userId
+       WHERE orders.userId = ?
+       ORDER BY orders.createdAt DESC`,
       [userId]
     );
     const orders: Order[] = [];
