@@ -270,16 +270,16 @@ const styles = StyleSheet.create({
   },
   bannerImage: {
     width: '100%',
-    height: 150,
+    height: 96,
     borderRadius: 14,
   },
   bannerCaption: {
     color: '#ddd6fe',
-    fontSize: 10,
+    fontSize: 5,
   },
   bannerTitle: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     marginTop: 2,
     flexShrink: 1,
