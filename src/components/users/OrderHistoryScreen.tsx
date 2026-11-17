@@ -180,19 +180,6 @@ export const OrderHistoryScreen = ({ route }: Props) => {
                 ) : null}
               </View>
 
-              {/* Tổng tiền & Phương thức */}
-              <View style={styles.pricingRow}>
-                <Text style={styles.paymentMethodTag}>
-                  💳 {order.paymentMethod || 'COD'}
-                </Text>
-                <View style={styles.totalCol}>
-                  <Text style={styles.totalCaption}>Tổng thanh toán:</Text>
-                  <Text style={styles.totalAmount}>
-                    {order.totalAmount.toLocaleString('vi-VN')} đ
-                  </Text>
-                </View>
-              </View>
-
               <TouchableOpacity
                 style={styles.detailsButton}
                 onPress={() => setSelectedOrder(order)}
@@ -230,7 +217,7 @@ export const OrderHistoryScreen = ({ route }: Props) => {
                 // Đã hủy
                 <View style={styles.cancelledNotice}>
                   <Text style={styles.cancelledNoticeText}>
-                    ❌ Đơn hàng này đã được hủy.
+                    ❌ Đơn hàng đã được hủy.
                   </Text>
                 </View>
               )}

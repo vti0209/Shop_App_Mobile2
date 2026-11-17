@@ -1,9 +1,8 @@
 // src/components/admin/AdminHomeScreen.tsx
-// CHỨC NĂNG 13 (PHIẾU CHẤM ĐIỂM): Trang chủ quản trị
-// Gồm các nút chức năng: Quản lý user, Quản lý danh mục, Quản lý sản phẩm
+// CHỨC NĂNG 13: Trang chủ quản trị - Thống kê và Quản lý đơn hàng & doanh thu
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useCallback } from 'react';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import {
   StyleSheet,
@@ -23,6 +22,10 @@ const AdminHomeScreen: React.FC = () => {
     totalUsers: 0,
     totalCategories: 0,
     totalProducts: 0,
+    totalOrders: 0,
+    completedOrders: 0,
+    totalRevenue: 0,
+    pendingRevenue: 0,
   });
 
   const loadStats = useCallback(async () => {
@@ -30,21 +33,24 @@ const AdminHomeScreen: React.FC = () => {
     setStats(data);
   }, []);
 
-  useEffect(() => {
-    initProjectDatabase(() => {
-      loadStats();
-    });
-  }, [loadStats]);
+  useFocusEffect(
+    useCallback(() => {
+      initProjectDatabase(() => {
+        loadStats();
+      });
+    }, [loadStats])
+  );
 
   // Giao diện chính Trang chủ quản trị
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        {/* thêm ảnh banner vào chỗ này */}
+        {/* Banner */}
         <Image source={require('../../assets/images/banner.png')} style={styles.banner} />
-        {/* Khung tóm tắt thống kê gọn gàng */}
+
+        {/* Khung tóm tắt thống kê tổng quan */}
         <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Tổng quan</Text>
+          <Text style={styles.statsTitle}>Tổng quan hệ thống</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{stats.totalUsers}</Text>
@@ -58,10 +64,43 @@ const AdminHomeScreen: React.FC = () => {
               <Text style={styles.statNumber}>{stats.totalProducts}</Text>
               <Text style={styles.statLabel}>Sản phẩm</Text>
             </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats.totalOrders}</Text>
+              <Text style={styles.statLabel}>Đơn hàng</Text>
+            </View>
+          </View>
+
+          {/* Ô quản lý doanh thu thực tế (chỉ cộng khi giao thành công) */}
+          <View style={styles.revenueCard}>
+            <View style={styles.revenueHeader}>
+              <Text style={styles.revenueBadgeLabel}> Doanh thu</Text>
+              <Text style={styles.revenueOrdersCount}>
+                {stats.completedOrders}/{stats.totalOrders} đơn thành công
+              </Text>
+            </View>
+            <Text style={styles.revenueAmount}>
+              {stats.totalRevenue.toLocaleString('vi-VN')} đ
+            </Text>
+            <Text style={styles.revenueSubtext}>
+              * Chỉ cộng khi đơn hàng được giao thành công. Các đơn đang xử lý ({stats.pendingRevenue.toLocaleString('vi-VN')}đ) chưa cộng vào.
+            </Text>
           </View>
         </View>
 
-        <Text style={styles.menuTitle}>Menu</Text>
+        <Text style={styles.menuTitle}>Menu Quản Trị</Text>
+
+        {/* Nút: Quản lý đơn hàng & Doanh thu */}
+        <TouchableOpacity
+          style={[styles.menuButton, styles.btnOrders]}
+          onPress={() => navigation.navigate('Orders')}
+        >
+          <Text style={styles.menuButtonTitle}>
+            Quản lý đơn & Doanh thu ({stats.totalOrders})
+          </Text>
+          <Text style={styles.menuButtonDesc}>
+            Theo dõi trạng thái giao hàng, duyệt đơn và quản lý doanh thu của cửa hàng
+          </Text>
+        </TouchableOpacity>
 
         {/* Nút 1: Quản lý user */}
         <TouchableOpacity
@@ -69,6 +108,7 @@ const AdminHomeScreen: React.FC = () => {
           onPress={() => navigation.navigate('Users')}
         >
           <Text style={styles.menuButtonTitle}>Quản lý user ({stats.totalUsers})</Text>
+          <Text style={styles.menuButtonDesc}>Xem danh sách tài khoản khách hàng và phân quyền</Text>
         </TouchableOpacity>
 
         {/* Nút 2: Quản lý danh mục */}
@@ -77,6 +117,7 @@ const AdminHomeScreen: React.FC = () => {
           onPress={() => navigation.navigate('Categories')}
         >
           <Text style={styles.menuButtonTitle}>Quản lý danh mục ({stats.totalCategories})</Text>
+          <Text style={styles.menuButtonDesc}>Thêm mới, chỉnh sửa và quản lý các loại sản phẩm</Text>
         </TouchableOpacity>
 
         {/* Nút 3: Quản lý sản phẩm */}
@@ -85,6 +126,7 @@ const AdminHomeScreen: React.FC = () => {
           onPress={() => navigation.navigate('Products')}
         >
           <Text style={styles.menuButtonTitle}>Quản lý sản phẩm ({stats.totalProducts})</Text>
+          <Text style={styles.menuButtonDesc}>Kho sản phẩm, đơn giá và mô tả chi tiết</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -151,7 +193,7 @@ const styles = StyleSheet.create({
     color: '#0d6efd',
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#666',
     marginTop: 2,
     textAlign: 'center',
@@ -166,6 +208,42 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 8,
     marginBottom: 12,
+  },
+  revenueCard: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  revenueHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  revenueBadgeLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#047857',
+  },
+  revenueOrdersCount: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  revenueAmount: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#059669',
+    marginVertical: 4,
+  },
+  revenueSubtext: {
+    fontSize: 11,
+    color: '#64748b',
+    lineHeight: 15,
+  },
+  btnOrders: {
+    backgroundColor: '#7c3aed',
   },
   btnUser: {
     backgroundColor: '#0d6efd',

@@ -323,9 +323,6 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
         {/* ================= SECTION 1: ACCOUNT INFORMATION ================= */}
         <View style={styles.card}>
           <View style={styles.sectionHeader}>
-            <View style={styles.headerIconBadge}>
-              <Text style={styles.headerEmoji}>😎</Text>
-            </View>
             <View style={styles.headerTextCol}>
               <Text style={styles.sectionTitle}>Thông tin tài khoản</Text>
             </View>
@@ -369,7 +366,7 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
             onPress={() => setShowPasswordSection((prev) => !prev)}
           >
             <Text style={styles.passwordToggleText}>
-              {showPasswordSection ? '▲ Đóng phần đổi mật khẩu' : '🔒 Đổi mật khẩu'}
+              {showPasswordSection ? '▲ Đóng ' : ' Đổi mật khẩu'}
             </Text>
           </TouchableOpacity>
 
@@ -429,7 +426,7 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
 
           <View style={styles.noticeCallout}>
             <Text style={styles.noticeText}>
-              💡 Mục này sẽ được tự động điền khi bạn nhập thông tin để đặt hàng
+              Mục này sẽ được tự động điền khi bạn nhập thông tin để đặt hàng
             </Text>
           </View>
 
@@ -517,13 +514,11 @@ export const ProfileSettingsScreen: React.FC<ProfileSettingsScreenProps> = ({ ro
             style={styles.actionRowBtn}
             onPress={() => user && navigation.navigate('OrderHistory', { userId: user.id })}
           >
-            <Text style={styles.actionRowIcon}>📋</Text>
-            <Text style={styles.actionRowText}>Xem đơn hàng đã đặt</Text>
+            <Text style={styles.actionRowText}>Đơn hàng</Text>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.actionRowBtn, styles.logoutBtn]} onPress={handleLogout}>
-            <Text style={styles.actionRowIcon}>↪️</Text>
             <Text style={styles.logoutText}>Đăng xuất</Text>
           </TouchableOpacity>
         </View>

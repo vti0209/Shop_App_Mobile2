@@ -98,8 +98,8 @@ const AdminTabNavigator = () => {
         name="Orders"
         component={AdminOrdersScreen}
         options={{
-          title: 'Đơn hàng',
-          tabBarLabel: 'Orders',
+          title: 'Quản lý đơn hàng & Doanh thu',
+          tabBarLabel: 'Đơn hàng',
           tabBarIcon: OrdersTabIcon,
         }}
       />

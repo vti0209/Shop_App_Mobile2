@@ -332,6 +332,10 @@ export const getDashboardStats = async (): Promise<{
   totalUsers: number;
   totalCategories: number;
   totalProducts: number;
+  totalOrders: number;
+  completedOrders: number;
+  totalRevenue: number;
+  pendingRevenue: number;
 }> => {
   try {
     const db = await getProjectDb();
@@ -340,15 +344,36 @@ export const getDashboardStats = async (): Promise<{
     );
     const [catRes] = await db.executeSql('SELECT COUNT(*) as count FROM categories');
     const [prodRes] = await db.executeSql('SELECT COUNT(*) as count FROM products');
+    const [orderRes] = await db.executeSql('SELECT COUNT(*) as count FROM orders');
+    // Chỉ cộng doanh thu của các đơn hàng ĐÃ GIAO THÀNH CÔNG (status = 'COMPLETED')
+    const [revRes] = await db.executeSql(
+      "SELECT COALESCE(SUM(totalAmount), 0) as totalRevenue, COUNT(*) as count FROM orders WHERE status = 'COMPLETED'"
+    );
+    // Doanh thu tạm tính (chờ giao hoặc đang xử lý, chưa cộng vào số dư)
+    const [pendingRes] = await db.executeSql(
+      "SELECT COALESCE(SUM(totalAmount), 0) as pendingRevenue FROM orders WHERE status IN ('PENDING', 'CONFIRMED', 'SHIPPING')"
+    );
 
     return {
       totalUsers: userRes.rows.item(0)?.count || 0,
       totalCategories: catRes.rows.item(0)?.count || 0,
       totalProducts: prodRes.rows.item(0)?.count || 0,
+      totalOrders: orderRes.rows.item(0)?.count || 0,
+      completedOrders: revRes.rows.item(0)?.count || 0,
+      totalRevenue: revRes.rows.item(0)?.totalRevenue || 0,
+      pendingRevenue: pendingRes.rows.item(0)?.pendingRevenue || 0,
     };
   } catch (error) {
     console.error('❌ Lỗi lấy thống kê dashboard:', error);
-    return { totalUsers: 0, totalCategories: 0, totalProducts: 0 };
+    return {
+      totalUsers: 0,
+      totalCategories: 0,
+      totalProducts: 0,
+      totalOrders: 0,
+      completedOrders: 0,
+      totalRevenue: 0,
+      pendingRevenue: 0,
+    };
   }
 };
 

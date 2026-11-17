@@ -49,7 +49,8 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
   const [notes, setNotes] = useState('');
 
   // 2. PAYMENT & SHIPPING DEFAULTS & OFFERS
-  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Thẻ tín dụng/Ghi nợ' | 'Ví điện tử'>('COD');
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Ngân hàng' | 'Ví điện tử'>('COD');
+  const [paymentCode] = useState(() => 'DH' + Math.floor(100000 + Math.random() * 900000));
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState('');
@@ -222,6 +223,18 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
 
     const fullCustomerAddress = `${streetAddress.trim()}, ${selectedWard}, ${selectedDistrict}, ${selectedProvince}`;
 
+    // Tạo ghi chú bao gồm Mã thanh toán nếu thanh toán qua Ngân hàng hoặc Ví điện tử
+    const trimmedNotes = notes.trim();
+    const paymentTag = paymentMethod !== 'COD' ? `[Mã TT: ${paymentCode}]` : '';
+    const finalNotes = [trimmedNotes, paymentTag].filter(Boolean).join(' | ');
+
+    const paymentLabel =
+      paymentMethod === 'COD'
+        ? 'Thanh toán khi nhận hàng (COD)'
+        : paymentMethod === 'Ngân hàng'
+        ? 'Chuyển khoản ngân hàng'
+        : 'Ví điện tử';
+
     setIsSubmitting(true);
     try {
       const success = await createOrder(
@@ -230,8 +243,8 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
           customerName: customerName.trim(),
           customerPhone: customerPhone.trim(),
           customerAddress: fullCustomerAddress,
-          notes: notes.trim(),
-          paymentMethod,
+          notes: finalNotes,
+          paymentMethod: paymentLabel,
           shippingMethod: 'Standard Shipping',
           discountAmount: discount,
           totalAmount: total,
@@ -248,7 +261,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
       setIsOrderReviewVisible(false);
       Alert.alert(
         '🎉 Đặt hàng thành công!',
-        `Đơn hàng của bạn trị giá ${total.toLocaleString('vi-VN')} đ đã được tiếp nhận. Bạn có thể theo dõi tiến độ trong Lịch sử mua hàng.`,
+        `Đơn hàng trị giá ${total.toLocaleString('vi-VN')} đ đã được tiếp nhận thành công.\nPhương thức: ${paymentLabel}${paymentMethod !== 'COD' ? `\nMã thanh toán: ${paymentCode}` : ''}\nBạn có thể theo dõi tiến độ trong Lịch sử mua hàng.`,
         [
           {
             text: 'Xem đơn hàng',
@@ -327,300 +340,428 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
           )}
         </View>
 
-        {/* 1. CHECKOUT FORM WITH SEPARATED LOCATION FIELDS */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Thông tin nhận hàng</Text>
-          </View>
-
-          {/* Họ và tên */}
-          <Text style={styles.inputLabel}>
-            Họ và tên người nhận<Text style={styles.requiredStar}> *</Text>
-          </Text>
-          <TextInput
-            style={[styles.input, !isNameValid && customerName.length > 0 && styles.inputError]}
-            value={customerName}
-            onChangeText={setCustomerName}
-            placeholder="Nhập họ và tên đầy đủ"
-            placeholderTextColor="#94a3b8"
-            autoCapitalize="words"
-          />
-          {!isNameValid && customerName.length > 0 && (
-            <Text style={styles.errorText}>Họ và tên phải có ít nhất 2 ký tự hợp lệ.</Text>
-          )}
-
-          {/* Số điện thoại */}
-          <Text style={styles.inputLabel}>
-            Số điện thoại nhận hàng<Text style={styles.requiredStar}> *</Text>
-          </Text>
-          <TextInput
-            style={[styles.input, !isPhoneValid && customerPhone.length > 0 && styles.inputError]}
-            value={customerPhone}
-            onChangeText={setCustomerPhone}
-            placeholder="09.../03.../07... (10 chữ số)"
-            placeholderTextColor="#94a3b8"
-            keyboardType="phone-pad"
-          />
-          {!isPhoneValid && customerPhone.length > 0 && (
-            <Text style={styles.errorText}>Vui lòng nhập số điện thoại Việt Nam hợp lệ (10 chữ số).</Text>
-          )}
-
-          {/* Tỉnh / Thành phố */}
-          <LocationSelectModal
-            label="Tỉnh / Thành phố"
-            required
-            value={selectedProvince}
-            placeholder="Chọn Tỉnh / Thành phố"
-            options={provinceOptions}
-            onSelect={handleSelectProvince}
-            title="Chọn Tỉnh / Thành phố"
-          />
-
-          {/* Quận / Huyện (Disabled until Province chosen) */}
-          <LocationSelectModal
-            label="Quận / Huyện"
-            required
-            value={selectedDistrict}
-            placeholder={selectedProvince ? 'Chọn Quận / Huyện' : 'Vui lòng chọn Tỉnh/Thành phố trước'}
-            options={districtOptions}
-            disabled={!selectedProvince}
-            disabledHint="Bạn cần chọn Tỉnh / Thành phố trước khi chọn Quận / Huyện."
-            onSelect={handleSelectDistrict}
-            title={`Quận / Huyện tại ${selectedProvince}`}
-          />
-
-          {/* Phường / Xã (Disabled until District chosen) */}
-          <LocationSelectModal
-            label="Phường / Xã / Thị trấn"
-            required
-            value={selectedWard}
-            placeholder={selectedDistrict ? 'Chọn Phường / Xã' : 'Vui lòng chọn Quận/Huyện trước'}
-            options={wardOptions}
-            disabled={!selectedDistrict}
-            disabledHint="Bạn cần chọn Quận / Huyện trước khi chọn Phường / Xã."
-            onSelect={handleSelectWard}
-            title={`Phường / Xã tại ${selectedDistrict}`}
-          />
-
-          {/* Số nhà, tên đường */}
-          <Text style={styles.inputLabel}>
-            Địa chỉ cụ thể (Số nhà, tên đường)<Text style={styles.requiredStar}> *</Text>
-          </Text>
-          <TextInput
-            style={[styles.input, !isStreetValid && streetAddress.length > 0 && styles.inputError]}
-            value={streetAddress}
-            onChangeText={setStreetAddress}
-            placeholder="Số 9 Tô Hiến Thành, Tòa nhà B..."
-            placeholderTextColor="#94a3b8"
-            multiline
-            numberOfLines={3}
-          />
-
-          {/* Ghi chú */}
-          <Text style={styles.inputLabel}>Ghi chú (Không bắt buộc)</Text>
-          <TextInput
-            style={[styles.input, styles.notesInput]}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Giao giờ hành chính..."
-            placeholderTextColor="#94a3b8"
-            multiline
-            numberOfLines={4}
-          />
-        </View>
-
-        {/* 2. PHƯƠNG THỨC THANH TOÁN (DEFAULT COD + COLLAPSIBLE) */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
-            <TouchableOpacity
-              onPress={() => setShowPaymentOptions((prev) => !prev)}
-              style={styles.changeActionBtn}
-            >
-              <Text style={styles.changeActionText}>
-                {showPaymentOptions ? 'Thu gọn ▲' : 'Thay đổi ▼'}
+        {/* NẾU CHƯA ĐĂNG NHẬP: Hiển thị thông báo yêu cầu đăng nhập mới được mua hàng */}
+        {!effectiveUserId ? (
+          items.length > 0 ? (
+            <View style={styles.guestLoginCard}>
+              <View style={styles.guestLoginIconCircle}>
+                <Text style={styles.guestLoginIcon}>🔒</Text>
+              </View>
+              <Text style={styles.guestLoginTitle}>Đăng nhập để mua hàng</Text>
+              <Text style={styles.guestLoginDesc}>
+                Bạn đã thêm {items.length} món vào giỏ hàng. Bạn cần đăng nhập để điền thông tin giao hàng và hoàn tất đặt hàng.
               </Text>
-            </TouchableOpacity>
-          </View>
 
-          {/* Hiển thị phương thức đã chọn */}
-          <View style={styles.activePaymentBadge}>
-            <View style={styles.radioDotOuter}>
-              <View style={styles.radioDotInner} />
-            </View>
-            <View style={styles.paymentInfoCol}>
-              <Text style={styles.paymentMethodTitle}>
-                {paymentMethod === 'COD'
-                  ? 'Thanh toán khi nhận hàng (COD)'
-                  : paymentMethod}
-              </Text>
-              <Text style={styles.paymentMethodDesc}>
-                {paymentMethod === 'COD'
-                  ? 'Mặc định · Thanh toán tiền mặt khi kiểm tra hàng'
-                  : paymentMethod === 'Thẻ tín dụng/Ghi nợ'
-                  ? 'Visa, MasterCard, JCB an toàn qua cổng bảo mật'
-                  : 'MoMo, ZaloPay, VNPay quét mã nhanh chóng'}
-              </Text>
-            </View>
-          </View>
+              <View style={styles.guestTotalRow}>
+                <Text style={styles.guestTotalLabel}>Giỏ hàng ({items.length}): </Text>
+                <Text style={styles.guestTotalAmount}>{subtotal.toLocaleString('vi-VN')} đ</Text>
+              </View>
 
-          {/* Danh sách collapsible cho các phương thức khác */}
-          {showPaymentOptions && (
-            <View style={styles.collapsiblePayments}>
-              {(['COD', 'Thẻ tín dụng/Ghi nợ', 'Ví điện tử'] as const).map((method) => {
-                const isSelected = paymentMethod === method;
-                return (
-                  <TouchableOpacity
-                    key={method}
-                    style={[styles.paymentSelectRow, isSelected && styles.paymentSelectRowActive]}
-                    onPress={() => {
-                      setPaymentMethod(method);
-                      setShowPaymentOptions(false);
-                    }}
-                  >
-                    <View style={styles.radioDotOuter}>
-                      {isSelected && <View style={styles.radioDotInner} />}
-                    </View>
-                    <View style={styles.paymentOptionDetails}>
-                      <Text style={[styles.paymentOptionName, isSelected && styles.paymentOptionNameActive]}>
-                        {method === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : method}
-                      </Text>
-                      <Text style={styles.paymentOptionSub}>
-                        {method === 'COD'
-                          ? 'Thanh toán tiền mặt tận nơi khi nhận hàng'
-                          : method === 'Thẻ tín dụng/Ghi nợ'
-                          ? 'Hỗ trợ thẻ nội địa & quốc tế'
-                          : 'Liên kết ví MoMo, ZaloPay, ShopeePay'}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-        </View>
-
-        {/* 2. HÌNH THỨC VẬN CHUYỂN (DEFAULT STANDARD SHIPPING) */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Hình thức vận chuyển</Text>
-          <View style={styles.shippingMethodCard}>
-            <View style={styles.radioDotOuter}>
-              <View style={styles.radioDotInner} />
-            </View>
-            <View style={styles.shippingInfoCol}>
-              <Text style={styles.shippingTitle}>Giao hàng tiêu chuẩn</Text>
-              <Text style={styles.shippingDesc}>Chi phí rẻ · Giao từ 2–3 ngày làm việc</Text>
-            </View>
-            <Text style={styles.shippingBadgeFree}>Miễn phí</Text>
-          </View>
-        </View>
-
-        {/* 2. ƯU ĐÃI & KHUYẾN MÃI (OFFERS SECTION) */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Ưu đãi & Khuyến mãi</Text>
-          <View style={styles.promoInputRow}>
-            <TextInput
-              style={styles.promoField}
-              value={promoInput}
-              onChangeText={setPromoInput}
-              placeholder="Nhập mã..."
-              placeholderTextColor="#94a3b8"
-              autoCapitalize="characters"
-            />
-            <TouchableOpacity
-              style={styles.applyBtn}
-              onPress={() => handleApplyPromoCode()}
-              accessibilityRole="button"
-            >
-              <Text style={styles.applyBtnText}>Áp dụng</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Quick voucher chips */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.voucherChipsRow}>
-            {AVAILABLE_VOUCHERS.map((voucher) => (
               <TouchableOpacity
-                key={voucher.code}
-                style={[
-                  styles.voucherChip,
-                  appliedPromo === voucher.code && styles.voucherChipActive,
-                ]}
-                onPress={() => handleApplyPromoCode(voucher.code)}
+                style={styles.guestLoginButton}
+                onPress={() => navigation.navigate('Login')}
+                accessibilityRole="button"
               >
-                <Text
-                  style={[
-                    styles.voucherChipText,
-                    appliedPromo === voucher.code && styles.voucherChipTextActive,
-                  ]}
-                >
-                  🏷️ {voucher.label}
+                <Text style={styles.guestLoginButtonText}>Đăng nhập</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.guestRegisterButton}
+                onPress={() => navigation.navigate('Register')}
+                accessibilityRole="button"
+              >
+                <Text style={styles.guestRegisterButtonText}>
+                  Chưa có tài khoản? Đăng ký ngay
                 </Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {promoMessage ? (
-            <Text
-              style={[
-                styles.promoFeedbackText,
-                appliedPromo ? styles.promoSuccessText : styles.promoErrorText,
-              ]}
-            >
-              {appliedPromo ? '✓ ' : '✕ '}
-              {promoMessage}
-            </Text>
-          ) : null}
-        </View>
-
-        {/* CHI TIẾT THANH TOÁN (PRICE BREAKDOWN) */}
-        <View style={[styles.sectionCard, styles.breakdownCard]}>
-          <Text style={styles.sectionTitle}>Chi tiết thanh toán</Text>
-          <View style={styles.breakdownLine}>
-            <Text style={styles.breakdownLabel}>Tạm tính ({items.length} món)</Text>
-            <Text style={styles.breakdownValue}>{subtotal.toLocaleString('vi-VN')} đ</Text>
-          </View>
-          <View style={styles.breakdownLine}>
-            <Text style={styles.breakdownLabel}>Phí vận chuyển</Text>
-            <Text style={styles.freeText}>0 đ (Miễn phí)</Text>
-          </View>
-          {discount > 0 && (
-            <View style={styles.breakdownLine}>
-              <Text style={styles.discountLabel}>Khuyến mãi giảm giá</Text>
-              <Text style={styles.discountValue}>−{discount.toLocaleString('vi-VN')} đ</Text>
             </View>
-          )}
-          <View style={styles.summaryDivider} />
-          <View style={styles.breakdownLine}>
-            <Text style={styles.totalLabel}>Tổng thanh toán</Text>
-            <Text style={styles.totalValue}>{total.toLocaleString('vi-VN')} đ</Text>
-          </View>
-        </View>
+          ) : null
+        ) : (
+          /* NẾU ĐÃ ĐĂNG NHẬP: GIỮ NGUYÊN LUỒNG ĐIỀN FORM VÀ THANH TOÁN */
+          <>
+            {/* 1. CHECKOUT FORM WITH SEPARATED LOCATION FIELDS */}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Thông tin nhận hàng</Text>
+              </View>
+
+              {/* Họ và tên */}
+              <Text style={styles.inputLabel}>
+                Họ và tên người nhận<Text style={styles.requiredStar}> *</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, !isNameValid && customerName.length > 0 && styles.inputError]}
+                value={customerName}
+                onChangeText={setCustomerName}
+                placeholder="Nhập họ và tên đầy đủ"
+                placeholderTextColor="#94a3b8"
+                autoCapitalize="words"
+              />
+              {!isNameValid && customerName.length > 0 && (
+                <Text style={styles.errorText}>Họ và tên phải có ít nhất 2 ký tự hợp lệ.</Text>
+              )}
+
+              {/* Số điện thoại */}
+              <Text style={styles.inputLabel}>
+                Số điện thoại nhận hàng<Text style={styles.requiredStar}> *</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, !isPhoneValid && customerPhone.length > 0 && styles.inputError]}
+                value={customerPhone}
+                onChangeText={setCustomerPhone}
+                placeholder="09.../03.../07... (10 chữ số)"
+                placeholderTextColor="#94a3b8"
+                keyboardType="phone-pad"
+              />
+              {!isPhoneValid && customerPhone.length > 0 && (
+                <Text style={styles.errorText}>Vui lòng nhập số điện thoại Việt Nam hợp lệ (10 chữ số).</Text>
+              )}
+
+              {/* Tỉnh / Thành phố */}
+              <LocationSelectModal
+                label="Tỉnh / Thành phố"
+                required
+                value={selectedProvince}
+                placeholder="Chọn Tỉnh / Thành phố"
+                options={provinceOptions}
+                onSelect={handleSelectProvince}
+                title="Chọn Tỉnh / Thành phố"
+              />
+
+              {/* Quận / Huyện (Disabled until Province chosen) */}
+              <LocationSelectModal
+                label="Quận / Huyện"
+                required
+                value={selectedDistrict}
+                placeholder={selectedProvince ? 'Chọn Quận / Huyện' : 'Vui lòng chọn Tỉnh/Thành phố trước'}
+                options={districtOptions}
+                disabled={!selectedProvince}
+                disabledHint="Bạn cần chọn Tỉnh / Thành phố trước khi chọn Quận / Huyện."
+                onSelect={handleSelectDistrict}
+                title={`Quận / Huyện tại ${selectedProvince}`}
+              />
+
+              {/* Phường / Xã (Disabled until District chosen) */}
+              <LocationSelectModal
+                label="Phường / Xã / Thị trấn"
+                required
+                value={selectedWard}
+                placeholder={selectedDistrict ? 'Chọn Phường / Xã' : 'Vui lòng chọn Quận/Huyện trước'}
+                options={wardOptions}
+                disabled={!selectedDistrict}
+                disabledHint="Bạn cần chọn Quận / Huyện trước khi chọn Phường / Xã."
+                onSelect={handleSelectWard}
+                title={`Phường / Xã tại ${selectedDistrict}`}
+              />
+
+              {/* Số nhà, tên đường */}
+              <Text style={styles.inputLabel}>
+                Địa chỉ cụ thể (Số nhà, tên đường)<Text style={styles.requiredStar}> *</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, !isStreetValid && streetAddress.length > 0 && styles.inputError]}
+                value={streetAddress}
+                onChangeText={setStreetAddress}
+                placeholder="Số 9 Tô Hiến Thành, Tòa nhà B..."
+                placeholderTextColor="#94a3b8"
+                multiline
+                numberOfLines={3}
+              />
+
+              {/* Ghi chú */}
+              <Text style={styles.inputLabel}>Ghi chú (Không bắt buộc)</Text>
+              <TextInput
+                style={[styles.input, styles.notesInput]}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Giao giờ hành chính..."
+                placeholderTextColor="#94a3b8"
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+
+            {/* 2. PHƯƠNG THỨC THANH TOÁN (COD, NGÂN HÀNG, VÍ ĐIỆN TỬ) */}
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
+                <TouchableOpacity
+                  onPress={() => setShowPaymentOptions((prev) => !prev)}
+                  style={styles.changeActionBtn}
+                >
+                  <Text style={styles.changeActionText}>
+                    {showPaymentOptions ? 'Thu gọn ▲' : 'Thay đổi ▼'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Hiển thị phương thức đã chọn */}
+              <View style={styles.activePaymentBadge}>
+                <View style={styles.radioDotOuter}>
+                  <View style={styles.radioDotInner} />
+                </View>
+                <View style={styles.paymentInfoCol}>
+                  <Text style={styles.paymentMethodTitle}>
+                    {paymentMethod === 'COD'
+                      ? 'Thanh toán khi nhận hàng (COD)'
+                      : paymentMethod === 'Ngân hàng'
+                      ? 'CK ngân hàng (24/7)'
+                      : 'Ví điện tử'}
+                  </Text>
+                  <Text style={styles.paymentMethodDesc}>
+                    {paymentMethod === 'COD'
+                      ? 'Mặc định · Thanh toán tiền mặt khi nhận hàng'
+                      : paymentMethod === 'Ngân hàng'
+                      ? 'Chuyển khoản theo số tài khoản'
+                      : 'Chuyển tiền nhanh qua ứng dụng'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* THÔNG TIN MẶC ĐỊNH KHI CHỌN NGÂN HÀNG HOẶC VÍ ĐIỆN TỬ */}
+              {paymentMethod === 'Ngân hàng' && (
+                <View style={styles.paymentDetailsBox}>
+                  <View style={styles.paymentBoxHeader}>
+                    <Text style={styles.paymentBoxTitle}>Thông tin STK</Text>
+                    <View style={styles.paymentCodeBadge}>
+                      <Text style={styles.paymentCodeBadgeText}>Mã TT: {paymentCode}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Ngân hàng:</Text>
+                    <Text style={styles.paymentDetailVal}>MB Bank</Text>
+                  </View>
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Số tài khoản:</Text>
+                    <Text style={[styles.paymentDetailVal, styles.paymentAccountNum]}>0987 654 321</Text>
+                  </View>
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Chủ tài khoản:</Text>
+                    <Text style={styles.paymentDetailVal}>HO VAN TIET </Text>
+                  </View>
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Số tiền:</Text>
+                    <Text style={[styles.paymentDetailVal, styles.paymentPriceHighlight]}>
+                      {total.toLocaleString('vi-VN')} đ
+                    </Text>
+                  </View>
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Nội dung CK:</Text>
+                    <Text style={[styles.paymentDetailVal, styles.paymentSyntaxHighlight]}>
+                        {paymentCode}
+                    </Text>
+                  </View>
+                  <Text style={styles.paymentGuideText}>
+                    Quý khách chuyển khoản đúng Mã thanh toán để đơn hàng được duyệt tự động.
+                  </Text>
+                </View>
+              )}
+
+              {paymentMethod === 'Ví điện tử' && (
+                <View style={styles.paymentDetailsBox}>
+                  <View style={styles.paymentBoxHeader}>
+                    <Text style={styles.paymentBoxTitle}>Thông tin ví</Text>
+                    <View style={styles.paymentCodeBadge}>
+                      <Text style={styles.paymentCodeBadgeText}>Mã TT: {paymentCode}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Ví hỗ trợ:</Text>
+                    <Text style={styles.paymentDetailVal}>MoMo / ZaloPay / VNPay</Text>
+                  </View>
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Số điện thoại ví:</Text>
+                    <Text style={[styles.paymentDetailVal, styles.paymentAccountNum]}>0912 345 678</Text>
+                  </View>
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Chủ ví:</Text>
+                    <Text style={styles.paymentDetailVal}>HO VAN TIET</Text>
+                  </View>
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Số tiền:</Text>
+                    <Text style={[styles.paymentDetailVal, styles.paymentPriceHighlight]}>
+                      {total.toLocaleString('vi-VN')} đ
+                    </Text>
+                  </View>
+                  <View style={styles.paymentDetailRow}>
+                    <Text style={styles.paymentDetailLabel}>Lời nhắn:</Text>
+                    <Text style={[styles.paymentDetailVal, styles.paymentSyntaxHighlight]}>
+                      {paymentCode}
+                    </Text>
+                  </View>
+                  <Text style={styles.paymentGuideText}>
+                    Quý khách chuyển khoản đúng Mã thanh toán để đơn hàng được duyệt tự động.
+                  </Text>
+                </View>
+              )}
+
+              {/* Danh sách collapsible cho các phương thức khác */}
+              {showPaymentOptions && (
+                <View style={styles.collapsiblePayments}>
+                  {(['COD', 'Ngân hàng', 'Ví điện tử'] as const).map((method) => {
+                    const isSelected = paymentMethod === method;
+                    return (
+                      <TouchableOpacity
+                        key={method}
+                        style={[styles.paymentSelectRow, isSelected && styles.paymentSelectRowActive]}
+                        onPress={() => {
+                          setPaymentMethod(method);
+                          setShowPaymentOptions(false);
+                        }}
+                      >
+                        <View style={styles.radioDotOuter}>
+                          {isSelected && <View style={styles.radioDotInner} />}
+                        </View>
+                        <View style={styles.paymentOptionDetails}>
+                          <Text style={[styles.paymentOptionName, isSelected && styles.paymentOptionNameActive]}>
+                            {method === 'COD'
+                              ? 'Thanh toán khi nhận hàng (COD)'
+                              : method === 'Ngân hàng'
+                              ? 'CK ngân hàng (24/7)'
+                              : 'Ví điện tử'}
+                          </Text>
+                          <Text style={styles.paymentOptionSub}>
+                            {method === 'COD'
+                              ? 'Thanh toán tiền mặt khi nhận hàng'
+                              : method === 'Ngân hàng'
+                              ? 'Hỗ trợ quét QR và chuyển khoản mọi ngân hàng'
+                              : 'Liên kết MoMo, ZaloPay, VNPay chuyển tiền nhanh'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* 2. HÌNH THỨC VẬN CHUYỂN */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Hình thức vận chuyển</Text>
+              <View style={styles.shippingMethodCard}>
+                <View style={styles.radioDotOuter}>
+                  <View style={styles.radioDotInner} />
+                </View>
+                <View style={styles.shippingInfoCol}>
+                  <Text style={styles.shippingTitle}>Giao hàng tiêu chuẩn</Text>
+                  <Text style={styles.shippingDesc}>Chi phí rẻ · Giao từ 2–3 ngày làm việc</Text>
+                </View>
+                <Text style={styles.shippingBadgeFree}>Miễn phí</Text>
+              </View>
+            </View>
+
+            {/* 2. ƯU ĐÃI & KHUYẾN MÃI */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Ưu đãi & Khuyến mãi</Text>
+              <View style={styles.promoInputRow}>
+                <TextInput
+                  style={styles.promoField}
+                  value={promoInput}
+                  onChangeText={setPromoInput}
+                  placeholder="Nhập mã..."
+                  placeholderTextColor="#94a3b8"
+                  autoCapitalize="characters"
+                />
+                <TouchableOpacity
+                  style={styles.applyBtn}
+                  onPress={() => handleApplyPromoCode()}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.applyBtnText}>Áp dụng</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Quick voucher chips */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.voucherChipsRow}>
+                {AVAILABLE_VOUCHERS.map((voucher) => (
+                  <TouchableOpacity
+                    key={voucher.code}
+                    style={[
+                      styles.voucherChip,
+                      appliedPromo === voucher.code && styles.voucherChipActive,
+                    ]}
+                    onPress={() => handleApplyPromoCode(voucher.code)}
+                  >
+                    <Text
+                      style={[
+                        styles.voucherChipText,
+                        appliedPromo === voucher.code && styles.voucherChipTextActive,
+                      ]}
+                    >
+                      🏷️ {voucher.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {promoMessage ? (
+                <Text
+                  style={[
+                    styles.promoFeedbackText,
+                    appliedPromo ? styles.promoSuccessText : styles.promoErrorText,
+                  ]}
+                >
+                  {appliedPromo ? '✓ ' : '✕ '}
+                  {promoMessage}
+                </Text>
+              ) : null}
+            </View>
+
+            {/* CHI TIẾT THANH TOÁN (PRICE BREAKDOWN) */}
+            <View style={[styles.sectionCard, styles.breakdownCard]}>
+              <Text style={styles.sectionTitle}>Chi tiết thanh toán</Text>
+              <View style={styles.breakdownLine}>
+                <Text style={styles.breakdownLabel}>Tạm tính ({items.length} món)</Text>
+                <Text style={styles.breakdownValue}>{subtotal.toLocaleString('vi-VN')} đ</Text>
+              </View>
+              <View style={styles.breakdownLine}>
+                <Text style={styles.breakdownLabel}>Phí vận chuyển</Text>
+                <Text style={styles.freeText}>0 đ (Miễn phí)</Text>
+              </View>
+              {discount > 0 && (
+                <View style={styles.breakdownLine}>
+                  <Text style={styles.discountLabel}>Khuyến mãi giảm giá</Text>
+                  <Text style={styles.discountValue}>−{discount.toLocaleString('vi-VN')} đ</Text>
+                </View>
+              )}
+              <View style={styles.summaryDivider} />
+              <View style={styles.breakdownLine}>
+                <Text style={styles.totalLabel}>Tổng thanh toán</Text>
+                <Text style={styles.totalValue}>{total.toLocaleString('vi-VN')} đ</Text>
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
 
-      {/* 2. SUBMISSION: STICKY "PLACE ORDER" BUTTON */}
-      <View style={styles.stickyFooter}>
-        {!isFormValid && items.length > 0 && (
-          <Text style={styles.stickyValidationNotice}>
-            ⚠️ Vui lòng điền đầy đủ thông tin *
-          </Text>
-        )}
-        <TouchableOpacity
-          style={[
-            styles.placeOrderButton,
-            (!isFormValid || items.length === 0 || isSubmitting) && styles.disabledPlaceOrder,
-          ]}
-          onPress={handleOpenOrderReview}
-          disabled={!isFormValid || items.length === 0 || isSubmitting}
-          accessibilityRole="button"
-          accessibilityLabel={`Xem lại thông tin đơn hàng, tổng tiền ${total.toLocaleString('vi-VN')} đồng`}
-        >
-          <Text style={styles.placeOrderText}>
-            {isSubmitting
-              ? 'Đang xử lý đặt hàng...'
-              : `Xem lại thông tin · ${total.toLocaleString('vi-VN')} đ`}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* 2. SUBMISSION: STICKY FOOTER */}
+      {effectiveUserId ? (
+        <View style={styles.stickyFooter}>
+          {!isFormValid && items.length > 0 && (
+            <Text style={styles.stickyValidationNotice}>
+              ⚠️ Vui lòng điền đầy đủ thông tin *
+            </Text>
+          )}
+          <TouchableOpacity
+            style={[
+              styles.placeOrderButton,
+              (!isFormValid || items.length === 0 || isSubmitting) && styles.disabledPlaceOrder,
+            ]}
+            onPress={handleOpenOrderReview}
+            disabled={!isFormValid || items.length === 0 || isSubmitting}
+            accessibilityRole="button"
+            accessibilityLabel={`Xem lại thông tin đơn hàng, tổng tiền ${total.toLocaleString('vi-VN')} đồng`}
+          >
+            <Text style={styles.placeOrderText}>
+              {isSubmitting
+                ? 'Đang xử lý đặt hàng...'
+                : `Xem lại thông tin · ${total.toLocaleString('vi-VN')} đ`}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <Modal
         visible={isOrderReviewVisible}
@@ -681,9 +822,26 @@ export const CartScreen: React.FC<CartScreenProps> = ({ route }) => {
                   value={
                     paymentMethod === 'COD'
                       ? 'Thanh toán khi nhận hàng (COD)'
-                      : paymentMethod
+                      : paymentMethod === 'Ngân hàng'
+                      ? 'CK ngân hàng (24/7)'
+                      : 'Ví điện tử'
                   }
                 />
+                {paymentMethod !== 'COD' && (
+                  <ReviewRow label="Mã thanh toán" value={paymentCode} />
+                )}
+                {paymentMethod === 'Ngân hàng' && (
+                  <ReviewRow
+                    label="Tài khoản nhận"
+                    value="MB Bank - 0987 654 321 (NGUYEN VAN A)"
+                  />
+                )}
+                {paymentMethod === 'Ví điện tử' && (
+                  <ReviewRow
+                    label="Ví nhận tiền"
+                    value="MoMo/ZaloPay - 0912 345 678 (NGUYEN VAN A)"
+                  />
+                )}
                 <ReviewRow label="Vận chuyển" value="Giao hàng tiêu chuẩn · Miễn phí" />
                 <ReviewRow
                   label="Tạm tính"
@@ -1290,6 +1448,185 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#ffffff',
+  },
+
+  // ================= STYLES CHO GUEST / CHƯA ĐĂNG NHẬP =================
+  guestLoginCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+  },
+  guestLoginIconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#ede9fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  guestLoginIcon: {
+    fontSize: 26,
+  },
+  guestLoginTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0f172a',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  guestLoginDesc: {
+    fontSize: 13,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 16,
+  },
+  guestTotalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  guestTotalLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  guestTotalAmount: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#be123c',
+  },
+  guestLoginButton: {
+    width: '100%',
+    minHeight: 48,
+    backgroundColor: '#6d28d9',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  guestLoginButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  guestRegisterButton: {
+    width: '100%',
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestRegisterButtonText: {
+    color: '#475569',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  guestStickyButton: {
+    minHeight: 48,
+    backgroundColor: '#6d28d9',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestStickyButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // ================= STYLES CHO THÔNG TIN MẶC ĐỊNH THANH TOÁN =================
+  paymentDetailsBox: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  paymentBoxHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  paymentBoxTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1e293b',
+  },
+  paymentCodeBadge: {
+    backgroundColor: '#ede9fe',
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  paymentCodeBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#6d28d9',
+  },
+  paymentDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 5,
+  },
+  paymentDetailLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  paymentDetailVal: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  paymentAccountNum: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#2563eb',
+    letterSpacing: 0.5,
+  },
+  paymentPriceHighlight: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#be123c',
+  },
+  paymentSyntaxHighlight: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#d97706',
+  },
+  paymentGuideText: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 8,
+    lineHeight: 16,
+    fontStyle: 'italic',
   },
 });
 
