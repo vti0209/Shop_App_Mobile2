@@ -120,7 +120,7 @@ const RegisterScreen = ({ navigation }: Props) => {
             <View style={styles.logoBadge}>
               <Text style={styles.logoEmoji}>🛍️</Text>
             </View>
-            <Text style={styles.appTitle}>Tạp hóa Vanw Tiet</Text>
+            <Text style={styles.appTitle}>Tạp hóa xanh</Text>
             <Text style={styles.appSubtitle}>Chào mừng đã gia nhập cùng chúng tôi!</Text>
           </View>
 
@@ -213,7 +213,7 @@ const RegisterScreen = ({ navigation }: Props) => {
 
             <Text style={styles.modalTitle}>Đăng ký thành công!</Text>
             <Text style={styles.modalMessage}>
-              Chào mừng bạn gia nhập Tạp hóa Vanw Tiet. Tài khoản{' '}
+              Chào mừng bạn gia nhập Tạp hóa xanh. Tài khoản{' '}
               <Text style={styles.highlightText}>@{registeredAccount}</Text> đã sẵn sàng để mua sắm.
             </Text>
 

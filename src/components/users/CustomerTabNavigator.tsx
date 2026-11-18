@@ -117,7 +117,7 @@ const CustomerTabNavigator = ({
         component={CustomerHomeScreen}
         initialParams={{ username, userId }}
         options={{
-          title: 'Tạp hóa Vanw Tiet',
+          title: 'Tạp hóa xanh',
           tabBarLabel: 'Home',
           tabBarIcon: ShopTabIcon,
         }}

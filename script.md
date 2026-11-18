@@ -1,5 +1,5 @@
-# Kịch bản MC demo ứng dụng Tạp hóa Vanw Tiet
-# MC Demo Script for the Vanw Tiet Grocery App
+# Kịch bản MC demo ứng dụng Tạp hóa xanh
+# MC Demo Script for the xanh Grocery App
 
 > **Thứ tự demo / Demo sequence:** Khách chưa đăng nhập → Khách hàng đăng nhập → Admin.  
 > Guest browsing → Signed-in customer → Admin.
